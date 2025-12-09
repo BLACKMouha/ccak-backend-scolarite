@@ -1,0 +1,542 @@
+@startuml
+!theme plain
+
+' =====================
+'   USER MANAGEMENT
+' =====================
+
+class User {
+  + UUID id
+  + string email (unique)
+  + string password_hash
+  + enum user_type (ADMIN, FACULTY, STUDENT, STAFF)
+  + boolean is_active
+  + timestamp email_verified_at
+  + timestamp last_login_at
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Admin {
+  + UUID id
+  + UUID user_id
+  + string full_name
+  + string phone
+  + enum role (SUPERADMIN, REGISTRAR, FINANCE, ACADEMIC_AFFAIRS)
+  + json permissions
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class AuditLog {
+  + UUID id
+  + UUID user_id
+  + string action (CREATE, UPDATE, DELETE, APPROVE, REJECT)
+  + string model_type (Student, Grade, Enrollment, etc.)
+  + UUID model_id
+  + json old_values
+  + json new_values
+  + string ip_address
+  + string user_agent
+  + timestamp created_at
+}
+
+' =====================
+'   ACADEMIC STRUCTURE
+' =====================
+
+class Faculty {
+  + UUID id
+  + string name (Ex: "Faculté des Sciences")
+  + string code (Ex: "FST")
+  + string description
+  + UUID dean_id (Nullable)
+  + boolean is_active
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Department {
+  + UUID id
+  + UUID faculty_id
+  + string name (Ex: "Informatique")
+  + string code (Ex: "INFO")
+  + UUID head_id (Nullable)
+  + boolean is_active
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class AcademicProgram {
+  + UUID id
+  + UUID department_id
+  + string name (Ex: "Licence Informatique")
+  + enum level (LICENCE, MASTER, DOCTORAT)
+  + int duration_semesters
+  + int total_credits_required
+  + boolean is_active
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class CourseUnit {
+  + UUID id
+  + UUID academic_program_id
+  + string code (Ex: "UE-INFO-L1-S1")
+  + string name (Ex: "Mathématiques 1")
+  + int semester_number
+  + int credits
+  + enum type (OBLIGATOIRE, OPTIONNEL)
+  + boolean is_active
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Course {
+  + UUID id
+  + UUID course_unit_id
+  + string code (Ex: "INFO101")
+  + string name (Ex: "Algorithmique")
+  + text description
+  + int credits
+  + int hours_lecture
+  + int hours_td
+  + int hours_tp
+  + decimal coefficient
+  + json prerequisites (Array of course IDs)
+  + boolean is_active
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+' =====================
+'   FACULTY/STAFF
+' =====================
+
+class Faculty_Member {
+  + UUID id
+  + UUID user_id
+  + string staff_number (Unique)
+  + string full_name
+  + string phone
+  + string address
+  + UUID department_id
+  + enum rank (PROFESSEUR, MAITRE_CONF, MAITRE_ASS, ASSISTANT, VACATAIRE)
+  + enum contract_type (PERMANENT, TEMPORARY, HOURLY)
+  + date hire_date
+  + boolean is_active
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Teaching_Assignment {
+  + UUID id
+  + UUID faculty_member_id
+  + UUID course_id
+  + UUID academic_year_id
+  + enum role (TITULAR, TD, TP)
+  + int hours_assigned
+  + decimal hourly_rate (For vacataires)
+  + boolean is_active
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+' =====================
+'   STUDENTS
+' =====================
+
+class Student {
+  + UUID id
+  + UUID user_id
+  + string student_number (Unique, Ex: "UCAK2024001")
+  + string full_name
+  + enum gender (M, F)
+  + date date_of_birth
+  + string place_of_birth
+  + string nationality
+  + string phone
+  + string emergency_contact_name
+  + string emergency_contact_phone
+  + string address
+  + string photo_url
+  + enum status (ACTIVE, SUSPENDED, GRADUATED, WITHDRAWN, EXPELLED)
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Guardian {
+  + UUID id
+  + UUID student_id
+  + string full_name
+  + string relationship (FATHER, MOTHER, GUARDIAN)
+  + string phone
+  + string email
+  + string address
+  + string occupation
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Document {
+  + UUID id
+  + UUID student_id
+  + enum type (CNI, BIRTH_CERT, BAC_DIPLOMA, TRANSCRIPT, PHOTO, MEDICAL)
+  + string file_path
+  + string file_name
+  + enum status (PENDING, APPROVED, REJECTED)
+  + UUID reviewed_by
+  + text notes
+  + timestamp uploaded_at
+  + timestamp reviewed_at
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+' =====================
+'   ENROLLMENT
+' =====================
+
+class AcademicYear {
+  + UUID id
+  + string name (Ex: "2024-2025")
+  + date start_date
+  + date end_date
+  + boolean is_current
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Enrollment {
+  + UUID id
+  + UUID student_id
+  + UUID academic_program_id
+  + UUID academic_year_id
+  + int current_semester
+  + enum status (PENDING, REGISTERED, ACTIVE, COMPLETED, WITHDRAWN)
+  + date enrollment_date
+  + decimal registration_fee_paid
+  + boolean is_scholarship
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Course_Enrollment {
+  + UUID id
+  + UUID enrollment_id
+  + UUID course_id
+  + UUID academic_year_id
+  + int semester
+  + enum status (ENROLLED, DROPPED, COMPLETED)
+  + date enrollment_date
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+' =====================
+'   GRADES & EVALUATION
+' =====================
+
+class Grade {
+  + UUID id
+  + UUID course_enrollment_id
+  + UUID student_id
+  + UUID course_id
+  + enum type (CC, EXAM, TP, ORAL)
+  + decimal score
+  + decimal max_score
+  + decimal weight (Coefficient)
+  + UUID entered_by
+  + enum status (DRAFT, SUBMITTED, VALIDATED, PUBLISHED)
+  + timestamp entered_at
+  + timestamp validated_at
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Semester_Result {
+  + UUID id
+  + UUID student_id
+  + UUID academic_year_id
+  + int semester
+  + decimal total_credits_enrolled
+  + decimal total_credits_earned
+  + decimal semester_average
+  + decimal semester_gpa
+  + enum decision (VALIDATED, COMPENSATION, FAILED, RESIT_REQUIRED)
+  + UUID calculated_by
+  + timestamp calculated_at
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Deliberation_Session {
+  + UUID id
+  + UUID academic_program_id
+  + UUID academic_year_id
+  + int semester
+  + string session_name (Ex: "Jury L1 S1 - Session Normale")
+  + date session_date
+  + enum status (SCHEDULED, IN_PROGRESS, COMPLETED, CLOSED)
+  + UUID presided_by
+  + json jury_members (Array of faculty IDs)
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Deliberation_Result {
+  + UUID id
+  + UUID deliberation_session_id
+  + UUID student_id
+  + enum decision (ADMITTED, ADMITTED_COMPENSATION, RESIT, FAILED, EXCLUDED)
+  + text jury_remarks
+  + boolean is_with_honors (Mention)
+  + enum honor_level (PASSABLE, ASSEZ_BIEN, BIEN, TRES_BIEN)
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+' =====================
+'   FINANCE
+' =====================
+
+class Fee_Structure {
+  + UUID id
+  + UUID academic_program_id
+  + UUID academic_year_id
+  + enum fee_type (REGISTRATION, TUITION, EXAM, LIBRARY, SPORT, INSURANCE)
+  + decimal amount
+  + boolean is_mandatory
+  + date due_date
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Payment {
+  + UUID id
+  + UUID student_id
+  + UUID fee_structure_id
+  + decimal amount_due
+  + decimal amount_paid
+  + enum payment_method (CASH, WAVE, ORANGE_MONEY, BANK_TRANSFER, CHEQUE)
+  + string transaction_reference
+  + enum status (PENDING, COMPLETED, PARTIAL, REFUNDED)
+  + UUID processed_by
+  + date payment_date
+  + text notes
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Scholarship {
+  + UUID id
+  + UUID student_id
+  + enum type (FULL, PARTIAL, MERIT, SOCIAL)
+  + decimal percentage_covered
+  + decimal amount_per_semester
+  + string sponsor_name
+  + date start_date
+  + date end_date
+  + enum status (ACTIVE, SUSPENDED, COMPLETED)
+  + text conditions
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+' =====================
+'   DOCUMENTS GENERATION
+' =====================
+
+class Generated_Document {
+  + UUID id
+  + UUID student_id
+  + enum type (TRANSCRIPT, CERTIFICATE, ATTESTATION, ID_CARD, DIPLOMA)
+  + string document_number (Unique)
+  + string file_path
+  + UUID generated_by
+  + json metadata (Student info snapshot at generation time)
+  + enum status (DRAFT, ISSUED, REVOKED)
+  + timestamp generated_at
+  + timestamp issued_at
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+' =====================
+'   NOTIFICATIONS
+' =====================
+
+class Notification {
+  + UUID id
+  + UUID user_id
+  + enum recipient_type (STUDENT, FACULTY, ADMIN, GUARDIAN)
+  + string title
+  + text message
+  + enum type (ENROLLMENT, GRADE, PAYMENT, DELIBERATION, SYSTEM, ANNOUNCEMENT)
+  + enum channel (EMAIL, SMS, PUSH, IN_APP)
+  + boolean is_read
+  + json metadata
+  + timestamp sent_at
+  + timestamp read_at
+  + timestamp created_at
+}
+
+class Announcement {
+  + UUID id
+  + UUID created_by
+  + string title
+  + text content
+  + enum target_audience (ALL, STUDENTS, FACULTY, SPECIFIC_PROGRAM, SPECIFIC_LEVEL)
+  + json target_filters (Program IDs, Department IDs, etc.)
+  + enum priority (LOW, NORMAL, HIGH, URGENT)
+  + boolean is_published
+  + timestamp publish_at
+  + timestamp expires_at
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+' =====================
+'   ATTENDANCE (Optional)
+' =====================
+
+class Class_Session {
+  + UUID id
+  + UUID course_id
+  + UUID faculty_member_id
+  + UUID academic_year_id
+  + date session_date
+  + time start_time
+  + time end_time
+  + string room_number
+  + enum type (LECTURE, TD, TP, EXAM)
+  + text notes
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Attendance {
+  + UUID id
+  + UUID class_session_id
+  + UUID student_id
+  + enum status (PRESENT, ABSENT, LATE, EXCUSED)
+  + time marked_at
+  + UUID marked_by
+  + text notes
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+' =====================
+'   LIBRARY (Optional)
+' =====================
+
+class Book {
+  + UUID id
+  + string isbn
+  + string title
+  + string author
+  + string publisher
+  + int publication_year
+  + string category
+  + int quantity_total
+  + int quantity_available
+  + boolean is_active
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Book_Loan {
+  + UUID id
+  + UUID book_id
+  + UUID student_id
+  + date loan_date
+  + date due_date
+  + date return_date (Nullable)
+  + enum status (ACTIVE, RETURNED, OVERDUE, LOST)
+  + decimal fine_amount
+  + UUID processed_by
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+' =====================
+'    RELATIONSHIPS
+' =====================
+
+' User Management
+User "1" --> "0..1" Admin : can_be
+User "1" --> "0..1" Faculty_Member : can_be
+User "1" --> "0..1" Student : can_be
+User "1" --> "many" AuditLog : performs_actions
+User "1" --> "many" Notification : receives
+
+' Academic Structure
+Faculty "1" --> "many" Department : contains
+Department "1" --> "many" AcademicProgram : offers
+AcademicProgram "1" --> "many" CourseUnit : has
+CourseUnit "1" --> "many" Course : contains
+Faculty_Member "1" --> "0..1" Department : belongs_to
+Faculty_Member "1" --> "many" Teaching_Assignment : teaches
+Teaching_Assignment "many" --> "1" Course : for_course
+
+' Faculty Hierarchy
+Faculty "1" --> "0..1" Faculty_Member : dean
+Department "1" --> "0..1" Faculty_Member : head
+
+' Students
+Student "1" --> "1" User : has_account
+Student "1" --> "many" Guardian : has_guardians
+Student "1" --> "many" Document : uploads
+Student "1" --> "many" Enrollment : enrolls_in
+Student "1" --> "many" Payment : makes
+
+' Document Review
+Admin "1" --> "many" Document : reviews
+
+' Enrollment Flow
+Enrollment "many" --> "1" Student : for_student
+Enrollment "many" --> "1" AcademicProgram : in_program
+Enrollment "many" --> "1" AcademicYear : during_year
+Enrollment "1" --> "many" Course_Enrollment : contains
+Course_Enrollment "many" --> "1" Course : for_course
+
+' Grades & Evaluation
+Course_Enrollment "1" --> "many" Grade : has_grades
+Grade "many" --> "1" Student : for_student
+Grade "many" --> "1" Course : in_course
+Grade "many" --> "1" Faculty_Member : entered_by
+
+' Deliberations
+Deliberation_Session "1" --> "many" Deliberation_Result : produces
+Deliberation_Result "many" --> "1" Student : for_student
+Semester_Result "many" --> "1" Student : for_student
+Faculty_Member "1" --> "many" Deliberation_Session : presides
+
+' Finance
+Fee_Structure "many" --> "1" AcademicProgram : for_program
+Payment "many" --> "1" Student : from_student
+Payment "many" --> "1" Fee_Structure : for_fee
+Scholarship "many" --> "1" Student : awarded_to
+Admin "1" --> "many" Payment : processes
+
+' Documents Generation
+Generated_Document "many" --> "1" Student : for_student
+Admin "1" --> "many" Generated_Document : generates
+
+' Attendance
+Class_Session "many" --> "1" Course : for_course
+Class_Session "many" --> "1" Faculty_Member : taught_by
+Attendance "many" --> "1" Class_Session : in_session
+Attendance "many" --> "1" Student : for_student
+Faculty_Member "1" --> "many" Attendance : marks
+
+' Library
+Book_Loan "many" --> "1" Book : borrows
+Book_Loan "many" --> "1" Student : by_student
+Admin "1" --> "many" Book_Loan : processes
+
+' Announcements
+Admin "1" --> "many" Announcement : creates
+
+@enduml
