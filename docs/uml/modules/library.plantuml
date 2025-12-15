@@ -1,0 +1,50 @@
+@startuml
+!theme plain
+title LIBRARY MODULE (Optional)
+
+class Student {
+  + UUID id
+  + string student_number
+  + string full_name
+}
+
+class Admin {
+  + UUID id
+  + string full_name
+}
+
+class Book {
+  + UUID id
+  + string isbn
+  + string title
+  + string author
+  + string publisher
+  + int publication_year
+  + string category
+  + int quantity_total
+  + int quantity_available
+  + boolean is_active
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Book_Loan {
+  + UUID id
+  + UUID book_id
+  + UUID student_id
+  + date loan_date
+  + date due_date
+  + date return_date (Nullable)
+  + enum status (ACTIVE, RETURNED, OVERDUE, LOST)
+  + decimal fine_amount
+  + UUID processed_by
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+' Relationships
+Book_Loan "many" --> "1" Book : borrows
+Book_Loan "many" --> "1" Student : by_student
+Admin "1" --> "many" Book_Loan : processes
+
+@enduml

@@ -1,0 +1,35 @@
+@startuml
+!theme plain
+title DOCUMENT GENERATION MODULE
+
+class Student {
+  + UUID id
+  + string student_number
+  + string full_name
+}
+
+class Admin {
+  + UUID id
+  + string full_name
+}
+
+class Generated_Document {
+  + UUID id
+  + UUID student_id
+  + enum type (TRANSCRIPT, CERTIFICATE, ATTESTATION, ID_CARD, DIPLOMA)
+  + string document_number (Unique)
+  + string file_path
+  + UUID generated_by
+  + json metadata (Student info snapshot at generation time)
+  + enum status (DRAFT, ISSUED, REVOKED)
+  + timestamp generated_at
+  + timestamp issued_at
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+' Relationships
+Generated_Document "many" --> "1" Student : for_student
+Admin "1" --> "many" Generated_Document : generates
+
+@enduml

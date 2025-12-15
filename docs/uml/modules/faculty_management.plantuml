@@ -1,0 +1,65 @@
+@startuml
+!theme plain
+title FACULTY MANAGEMENT MODULE
+
+class User {
+  + UUID id
+  + string email
+  + enum user_type
+}
+
+class Faculty_Member {
+  + UUID id
+  + UUID user_id
+  + string staff_number (Unique)
+  + string full_name
+  + string phone
+  + string address
+  + UUID department_id
+  + enum rank (PROFESSEUR, MAITRE_CONF, MAITRE_ASS, ASSISTANT, VACATAIRE)
+  + enum contract_type (PERMANENT, TEMPORARY, HOURLY)
+  + date hire_date
+  + boolean is_active
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Teaching_Assignment {
+  + UUID id
+  + UUID faculty_member_id
+  + UUID course_id
+  + UUID academic_year_id
+  + enum role (TITULAR, TD, TP)
+  + int hours_assigned
+  + decimal hourly_rate (For vacataires)
+  + boolean is_active
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Department {
+  + UUID id
+  + string name
+  + UUID head_id
+}
+
+class Course {
+  + UUID id
+  + string code
+  + string name
+}
+
+class AcademicYear {
+  + UUID id
+  + string name
+}
+
+' Relationships
+User "1" --> "0..1" Faculty_Member : can_be
+Faculty_Member "1" --> "0..1" Department : belongs_to
+Faculty_Member "1" --> "many" Teaching_Assignment : teaches
+Teaching_Assignment "many" --> "1" Course : for_course
+Teaching_Assignment "many" --> "1" AcademicYear : during_year
+Department "1" --> "0..1" Faculty_Member : head
+
+@enduml

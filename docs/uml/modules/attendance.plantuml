@@ -1,0 +1,62 @@
+@startuml
+!theme plain
+title ATTENDANCE MODULE (Optional)
+
+class Course {
+  + UUID id
+  + string code
+  + string name
+}
+
+class Faculty_Member {
+  + UUID id
+  + string full_name
+}
+
+class Student {
+  + UUID id
+  + string student_number
+  + string full_name
+}
+
+class AcademicYear {
+  + UUID id
+  + string name
+}
+
+class Class_Session {
+  + UUID id
+  + UUID course_id
+  + UUID faculty_member_id
+  + UUID academic_year_id
+  + date session_date
+  + time start_time
+  + time end_time
+  + string room_number
+  + enum type (LECTURE, TD, TP, EXAM)
+  + text notes
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Attendance {
+  + UUID id
+  + UUID class_session_id
+  + UUID student_id
+  + enum status (PRESENT, ABSENT, LATE, EXCUSED)
+  + time marked_at
+  + UUID marked_by
+  + text notes
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+' Relationships
+Class_Session "many" --> "1" Course : for_course
+Class_Session "many" --> "1" Faculty_Member : taught_by
+Class_Session "many" --> "1" AcademicYear : during_year
+Attendance "many" --> "1" Class_Session : in_session
+Attendance "many" --> "1" Student : for_student
+Faculty_Member "1" --> "many" Attendance : marks
+
+@enduml

@@ -1,0 +1,85 @@
+@startuml
+!theme plain
+title ACADEMIC STRUCTURE MODULE
+
+class Faculty {
+  + UUID id
+  + string name (Ex: "Faculté des Sciences")
+  + string code (Ex: "FST")
+  + string description
+  + UUID dean_id (Nullable)
+  + boolean is_active
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Department {
+  + UUID id
+  + UUID faculty_id
+  + string name (Ex: "Informatique")
+  + string code (Ex: "INFO")
+  + UUID head_id (Nullable)
+  + boolean is_active
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class AcademicProgram {
+  + UUID id
+  + UUID department_id
+  + string name (Ex: "Licence Informatique")
+  + enum level (LICENCE, MASTER, DOCTORAT)
+  + int duration_semesters
+  + int total_credits_required
+  + boolean is_active
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class CourseUnit {
+  + UUID id
+  + UUID academic_program_id
+  + string code (Ex: "UE-INFO-L1-S1")
+  + string name (Ex: "Mathématiques 1")
+  + int semester_number
+  + int credits
+  + enum type (OBLIGATOIRE, OPTIONNEL)
+  + boolean is_active
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Course {
+  + UUID id
+  + UUID course_unit_id
+  + string code (Ex: "INFO101")
+  + string name (Ex: "Algorithmique")
+  + text description
+  + int credits
+  + int hours_lecture
+  + int hours_td
+  + int hours_tp
+  + decimal coefficient
+  + json prerequisites (Array of course IDs)
+  + boolean is_active
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class AcademicYear {
+  + UUID id
+  + string name (Ex: "2024-2025")
+  + date start_date
+  + date end_date
+  + boolean is_current
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+' Relationships
+Faculty "1" --> "many" Department : contains
+Department "1" --> "many" AcademicProgram : offers
+AcademicProgram "1" --> "many" CourseUnit : has
+CourseUnit "1" --> "many" Course : contains
+
+@enduml

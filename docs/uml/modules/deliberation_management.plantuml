@@ -1,0 +1,59 @@
+@startuml
+!theme plain
+title DELIBERATION MANAGEMENT MODULE
+
+class Student {
+  + UUID id
+  + string student_number
+  + string full_name
+}
+
+class AcademicProgram {
+  + UUID id
+  + string name
+}
+
+class AcademicYear {
+  + UUID id
+  + string name
+}
+
+class Faculty_Member {
+  + UUID id
+  + string full_name
+}
+
+class Deliberation_Session {
+  + UUID id
+  + UUID academic_program_id
+  + UUID academic_year_id
+  + int semester
+  + string session_name (Ex: "Jury L1 S1 - Session Normale")
+  + date session_date
+  + enum status (SCHEDULED, IN_PROGRESS, COMPLETED, CLOSED)
+  + UUID presided_by
+  + json jury_members (Array of faculty IDs)
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Deliberation_Result {
+  + UUID id
+  + UUID deliberation_session_id
+  + UUID student_id
+  + enum decision (ADMITTED, ADMITTED_COMPENSATION, RESIT, FAILED, EXCLUDED)
+  + text jury_remarks
+  + boolean is_with_honors (Mention)
+  + enum honor_level (PASSABLE, ASSEZ_BIEN, BIEN, TRES_BIEN)
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+' Relationships
+Deliberation_Session "many" --> "1" AcademicProgram : for_program
+Deliberation_Session "many" --> "1" AcademicYear : during_year
+Deliberation_Session "1" --> "many" Deliberation_Result : produces
+Deliberation_Result "many" --> "1" Student : for_student
+Faculty_Member "1" --> "many" Deliberation_Session : presides
+
+@enduml

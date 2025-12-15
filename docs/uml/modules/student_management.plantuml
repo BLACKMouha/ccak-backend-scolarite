@@ -1,0 +1,69 @@
+@startuml
+!theme plain
+title STUDENT MANAGEMENT MODULE
+
+class User {
+  + UUID id
+  + string email
+  + enum user_type
+}
+
+class Student {
+  + UUID id
+  + UUID user_id
+  + string student_number (Unique, Ex: "UCAK2024001")
+  + string full_name
+  + enum gender (M, F)
+  + date date_of_birth
+  + string place_of_birth
+  + string nationality
+  + string phone
+  + string emergency_contact_name
+  + string emergency_contact_phone
+  + string address
+  + string photo_url
+  + enum status (ACTIVE, SUSPENDED, GRADUATED, WITHDRAWN, EXPELLED)
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Guardian {
+  + UUID id
+  + UUID student_id
+  + string full_name
+  + string relationship (FATHER, MOTHER, GUARDIAN)
+  + string phone
+  + string email
+  + string address
+  + string occupation
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Document {
+  + UUID id
+  + UUID student_id
+  + enum type (CNI, BIRTH_CERT, BAC_DIPLOMA, TRANSCRIPT, PHOTO, MEDICAL)
+  + string file_path
+  + string file_name
+  + enum status (PENDING, APPROVED, REJECTED)
+  + UUID reviewed_by
+  + text notes
+  + timestamp uploaded_at
+  + timestamp reviewed_at
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Admin {
+  + UUID id
+  + string full_name
+}
+
+' Relationships
+User "1" --> "0..1" Student : can_be
+Student "1" --> "many" Guardian : has_guardians
+Student "1" --> "many" Document : uploads
+Admin "1" --> "many" Document : reviews
+
+@enduml

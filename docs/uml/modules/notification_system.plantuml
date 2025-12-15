@@ -1,0 +1,50 @@
+@startuml
+!theme plain
+title NOTIFICATION SYSTEM MODULE
+
+class User {
+  + UUID id
+  + string email
+  + enum user_type
+}
+
+class Admin {
+  + UUID id
+  + string full_name
+}
+
+class Notification {
+  + UUID id
+  + UUID user_id
+  + enum recipient_type (STUDENT, FACULTY, ADMIN, GUARDIAN)
+  + string title
+  + text message
+  + enum type (ENROLLMENT, GRADE, PAYMENT, DELIBERATION, SYSTEM, ANNOUNCEMENT)
+  + enum channel (EMAIL, SMS, PUSH, IN_APP)
+  + boolean is_read
+  + json metadata
+  + timestamp sent_at
+  + timestamp read_at
+  + timestamp created_at
+}
+
+class Announcement {
+  + UUID id
+  + UUID created_by
+  + string title
+  + text content
+  + enum target_audience (ALL, STUDENTS, FACULTY, SPECIFIC_PROGRAM, SPECIFIC_LEVEL)
+  + json target_filters (Program IDs, Department IDs, etc.)
+  + enum priority (LOW, NORMAL, HIGH, URGENT)
+  + boolean is_published
+  + timestamp publish_at
+  + timestamp expires_at
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+' Relationships
+User "1" --> "many" Notification : receives
+Admin "1" --> "many" Announcement : creates
+
+@enduml

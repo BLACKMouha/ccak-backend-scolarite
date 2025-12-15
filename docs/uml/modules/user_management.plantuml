@@ -1,0 +1,45 @@
+@startuml
+!theme plain
+title USER MANAGEMENT & AUTHENTICATION MODULE
+
+class User {
+  + UUID id
+  + string email (unique)
+  + string password_hash
+  + enum user_type (ADMIN, FACULTY, STUDENT, STAFF)
+  + boolean is_active
+  + timestamp email_verified_at
+  + timestamp last_login_at
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Admin {
+  + UUID id
+  + UUID user_id
+  + string full_name
+  + string phone
+  + enum role (SUPERADMIN, REGISTRAR, FINANCE, ACADEMIC_AFFAIRS)
+  + json permissions
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class AuditLog {
+  + UUID id
+  + UUID user_id
+  + string action (CREATE, UPDATE, DELETE, APPROVE, REJECT)
+  + string model_type (Student, Grade, Enrollment, etc.)
+  + UUID model_id
+  + json old_values
+  + json new_values
+  + string ip_address
+  + string user_agent
+  + timestamp created_at
+}
+
+' Relationships
+User "1" --> "0..1" Admin : can_be
+User "1" --> "many" AuditLog : performs_actions
+
+@enduml

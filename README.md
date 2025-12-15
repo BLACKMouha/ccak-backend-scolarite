@@ -29,3 +29,7 @@ Backend API for the CCAK scolarité platform, built with Laravel 12, PostgreSQL,
 
 ## Testing
 - `php artisan test`
+
+## API docs (Scramble)
+- Live docs are available at `/docs/api` (Scramble renders from your routes).
+- Export a static OpenAPI file if needed: `php artisan scramble:export` (creates `api.json`).
