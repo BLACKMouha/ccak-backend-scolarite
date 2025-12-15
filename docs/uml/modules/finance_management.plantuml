@@ -1,0 +1,77 @@
+@startuml
+!theme plain
+title FINANCE MANAGEMENT MODULE
+
+class Student {
+  + UUID id
+  + string student_number
+  + string full_name
+}
+
+class AcademicProgram {
+  + UUID id
+  + string name
+}
+
+class AcademicYear {
+  + UUID id
+  + string name
+}
+
+class Admin {
+  + UUID id
+  + string full_name
+}
+
+class Fee_Structure {
+  + UUID id
+  + UUID academic_program_id
+  + UUID academic_year_id
+  + enum fee_type (REGISTRATION, TUITION, EXAM, LIBRARY, SPORT, INSURANCE)
+  + decimal amount
+  + boolean is_mandatory
+  + date due_date
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Payment {
+  + UUID id
+  + UUID student_id
+  + UUID fee_structure_id
+  + decimal amount_due
+  + decimal amount_paid
+  + enum payment_method (CASH, WAVE, ORANGE_MONEY, BANK_TRANSFER, CHEQUE)
+  + string transaction_reference
+  + enum status (PENDING, COMPLETED, PARTIAL, REFUNDED)
+  + UUID processed_by
+  + date payment_date
+  + text notes
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Scholarship {
+  + UUID id
+  + UUID student_id
+  + enum type (FULL, PARTIAL, MERIT, SOCIAL)
+  + decimal percentage_covered
+  + decimal amount_per_semester
+  + string sponsor_name
+  + date start_date
+  + date end_date
+  + enum status (ACTIVE, SUSPENDED, COMPLETED)
+  + text conditions
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+' Relationships
+Fee_Structure "many" --> "1" AcademicProgram : for_program
+Fee_Structure "many" --> "1" AcademicYear : for_year
+Payment "many" --> "1" Student : from_student
+Payment "many" --> "1" Fee_Structure : for_fee
+Scholarship "many" --> "1" Student : awarded_to
+Admin "1" --> "many" Payment : processes
+
+@enduml

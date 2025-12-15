@@ -1,0 +1,63 @@
+@startuml
+!theme plain
+title ENROLLMENT MANAGEMENT MODULE
+
+class Student {
+  + UUID id
+  + string student_number
+  + string full_name
+}
+
+class AcademicProgram {
+  + UUID id
+  + string name
+  + enum level
+}
+
+class AcademicYear {
+  + UUID id
+  + string name
+  + boolean is_current
+}
+
+class Enrollment {
+  + UUID id
+  + UUID student_id
+  + UUID academic_program_id
+  + UUID academic_year_id
+  + int current_semester
+  + enum status (PENDING, REGISTERED, ACTIVE, COMPLETED, WITHDRAWN)
+  + date enrollment_date
+  + decimal registration_fee_paid
+  + boolean is_scholarship
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Course_Enrollment {
+  + UUID id
+  + UUID enrollment_id
+  + UUID course_id
+  + UUID academic_year_id
+  + int semester
+  + enum status (ENROLLED, DROPPED, COMPLETED)
+  + date enrollment_date
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Course {
+  + UUID id
+  + string code
+  + string name
+  + int credits
+}
+
+' Relationships
+Enrollment "many" --> "1" Student : for_student
+Enrollment "many" --> "1" AcademicProgram : in_program
+Enrollment "many" --> "1" AcademicYear : during_year
+Enrollment "1" --> "many" Course_Enrollment : contains
+Course_Enrollment "many" --> "1" Course : for_course
+
+@enduml

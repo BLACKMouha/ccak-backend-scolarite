@@ -1,0 +1,74 @@
+@startuml
+!theme plain
+title GRADE MANAGEMENT MODULE
+
+class Student {
+  + UUID id
+  + string student_number
+  + string full_name
+}
+
+class Course {
+  + UUID id
+  + string code
+  + string name
+}
+
+class Faculty_Member {
+  + UUID id
+  + string full_name
+}
+
+class Course_Enrollment {
+  + UUID id
+  + UUID student_id
+  + UUID course_id
+}
+
+class Grade {
+  + UUID id
+  + UUID course_enrollment_id
+  + UUID student_id
+  + UUID course_id
+  + enum type (CC, EXAM, TP, ORAL)
+  + decimal score
+  + decimal max_score
+  + decimal weight (Coefficient)
+  + UUID entered_by
+  + enum status (DRAFT, SUBMITTED, VALIDATED, PUBLISHED)
+  + timestamp entered_at
+  + timestamp validated_at
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class Semester_Result {
+  + UUID id
+  + UUID student_id
+  + UUID academic_year_id
+  + int semester
+  + decimal total_credits_enrolled
+  + decimal total_credits_earned
+  + decimal semester_average
+  + decimal semester_gpa
+  + enum decision (VALIDATED, COMPENSATION, FAILED, RESIT_REQUIRED)
+  + UUID calculated_by
+  + timestamp calculated_at
+  + timestamp created_at
+  + timestamp updated_at
+}
+
+class AcademicYear {
+  + UUID id
+  + string name
+}
+
+' Relationships
+Course_Enrollment "1" --> "many" Grade : has_grades
+Grade "many" --> "1" Student : for_student
+Grade "many" --> "1" Course : in_course
+Grade "many" --> "1" Faculty_Member : entered_by
+Semester_Result "many" --> "1" Student : for_student
+Semester_Result "many" --> "1" AcademicYear : during_year
+
+@enduml
