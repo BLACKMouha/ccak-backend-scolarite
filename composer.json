@@ -9,8 +9,8 @@
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "*",
         "dedoc/scramble": "*",
+        "firebase/php-jwt": "*",
         "laravel/framework": "^12.0",
-        "laravel/sanctum": "*",
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "*",
         "spatie/laravel-permission": "*"
