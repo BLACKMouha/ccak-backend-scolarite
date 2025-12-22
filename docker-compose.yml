@@ -65,6 +65,41 @@ services:
     networks:
       - laravel
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4.7
+    container_name: ccak-backend-keycloak
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true"
+      KC_HOSTNAME: "localhost"
+      KC_HOSTNAME_STRICT: "false"
+      KC_PROXY_HEADERS: "xforwarded"
+    ports:
+      - "8180:8080"
+    networks:
+      - laravel
+
+  keycloak-init:
+    image: quay.io/keycloak/keycloak:26.4.7
+    depends_on:
+      - keycloak
+    entrypoint: ["/bin/sh", "-c"]
+    command: |
+      /opt/keycloak/bin/kcadm.sh config credentials \
+        --server http://keycloak:8080 \
+        --realm master \
+        --user $$KEYCLOAK_ADMIN \
+        --password $$KEYCLOAK_ADMIN_PASSWORD && \
+      /opt/keycloak/bin/kcadm.sh update realms/master -s sslRequired=NONE
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    networks:
+      - laravel
+    restart: "no"
+
 volumes:
   pgsql_data:
   redis_data:
