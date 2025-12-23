@@ -73,11 +73,11 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
       KC_HEALTH_ENABLED: "true"
-      KC_HOSTNAME: "localhost"
+      KC_HOSTNAME: "${KEYCLOAK_HOSTNAME:-localhost}"
       KC_HOSTNAME_STRICT: "false"
       KC_PROXY_HEADERS: "xforwarded"
     ports:
-      - "8180:8080"
+      - "8080:8080"
     networks:
       - laravel
 
