@@ -53,6 +53,8 @@ jobs:
           script: |
             set -e
             cd ${{ secrets.DEV_PATH }}
+            git reset --hard
+            git clean -fd
             git fetch origin develop
             git checkout -B develop origin/develop
             git reset --hard origin/develop
