@@ -5,12 +5,22 @@ namespace Tests\Feature\Academic;
 use App\Http\Middleware\KeycloakAuthenticate;
 use App\Models\Course;
 use App\Models\CourseUnit;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\InteractsWithPermissions;
 use Tests\TestCase;
 
 class CourseApiTest extends TestCase
 {
     use RefreshDatabase;
+    use InteractsWithPermissions;
+
+    private array $permissions = [
+        'courses.view',
+        'courses.create',
+        'courses.update',
+        'courses.delete',
+    ];
 
     protected function setUp(): void
     {
@@ -21,6 +31,8 @@ class CourseApiTest extends TestCase
 
     public function test_can_crud_courses(): void
     {
+        $this->actingAsUserWithPermissions($this->permissions);
+
         $courseUnit = CourseUnit::factory()->create();
         $prerequisite = Course::factory()->create();
 
@@ -78,6 +90,8 @@ class CourseApiTest extends TestCase
 
     public function test_course_requires_course_unit_and_valid_prerequisites(): void
     {
+        $this->actingAsUserWithPermissions($this->permissions);
+
         $this->postJson('/api/v1/courses', [
             'code' => 'CS201',
             'name' => 'Data Structures',
@@ -85,5 +99,15 @@ class CourseApiTest extends TestCase
             'prerequisites' => ['not-a-uuid'],
         ])->assertStatus(422)
             ->assertJsonValidationErrors(['course_unit_id', 'prerequisites.0']);
+    }
+
+    public function test_course_requires_permission(): void
+    {
+        $this->seedPermissions($this->permissions);
+
+        $this->actingAs(User::factory()->create());
+
+        $this->getJson('/api/v1/courses')
+            ->assertStatus(403);
     }
 }

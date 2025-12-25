@@ -6,11 +6,20 @@ use App\Http\Middleware\KeycloakAuthenticate;
 use App\Models\Faculty;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\InteractsWithPermissions;
 use Tests\TestCase;
 
 class DepartmentApiTest extends TestCase
 {
     use RefreshDatabase;
+    use InteractsWithPermissions;
+
+    private array $permissions = [
+        'departments.view',
+        'departments.create',
+        'departments.update',
+        'departments.delete',
+    ];
 
     protected function setUp(): void
     {
@@ -21,6 +30,8 @@ class DepartmentApiTest extends TestCase
 
     public function test_can_crud_departments(): void
     {
+        $this->actingAsUserWithPermissions($this->permissions);
+
         $faculty = Faculty::factory()->create();
         $head = User::factory()->create([
             'user_type' => 'FACULTY',
@@ -74,10 +85,22 @@ class DepartmentApiTest extends TestCase
 
     public function test_department_requires_faculty(): void
     {
+        $this->actingAsUserWithPermissions($this->permissions);
+
         $this->postJson('/api/v1/departments', [
             'name' => 'Mathematics',
             'code' => 'MATH',
         ])->assertStatus(422)
             ->assertJsonValidationErrors(['faculty_id']);
+    }
+
+    public function test_department_requires_permission(): void
+    {
+        $this->seedPermissions($this->permissions);
+
+        $this->actingAs(User::factory()->create());
+
+        $this->getJson('/api/v1/departments')
+            ->assertStatus(403);
     }
 }

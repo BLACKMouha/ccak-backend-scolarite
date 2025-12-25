@@ -2,6 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\UserRoleController;
 
 Route::middleware('keycloak')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -26,4 +28,9 @@ Route::middleware('keycloak')->group(function () {
     Route::apiResource('academic-programs', \App\Http\Controllers\Academic\AcademicProgramController::class);
     Route::apiResource('course-units', \App\Http\Controllers\Academic\CourseUnitController::class);
     Route::apiResource('courses', \App\Http\Controllers\Academic\CourseController::class);
+
+    Route::get('roles', [RoleController::class, 'index']);
+    Route::post('roles', [RoleController::class, 'store']);
+    Route::put('roles/{role}', [RoleController::class, 'update']);
+    Route::put('users/{user}/roles', [UserRoleController::class, 'update']);
 });
