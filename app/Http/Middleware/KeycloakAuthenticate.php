@@ -87,7 +87,7 @@ class KeycloakAuthenticate
 
         // Include client roles if present.
         $resourceRoles = collect(data_get($claims, 'resource_access', []))
-            ->map(fn ($access) => Arr::wrap($access['roles'] ?? []))
+            ->map(fn ($access) => Arr::wrap(data_get($access, 'roles', [])))
             ->flatten()
             ->all();
 

@@ -21,12 +21,17 @@ trait ApiResponse
             $data = $data->items();
         }
 
-        return response()->json([
+        $payload = [
             'success' => true,
             'data' => $data,
             'message' => $message,
-            'meta' => $meta,
-        ], $status);
+        ];
+
+        if ($meta !== null) {
+            $payload['meta'] = $meta;
+        }
+
+        return response()->json($payload, $status);
     }
 
     protected function error(string $message, int $status = 400, array $errors = []): JsonResponse
