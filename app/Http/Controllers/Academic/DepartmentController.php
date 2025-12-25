@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Academic;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\BaseApiController;
 use App\Http\Requests\Academic\StoreDepartmentRequest;
 use App\Http\Requests\Academic\UpdateDepartmentRequest;
 use App\Models\Department;
@@ -10,7 +10,7 @@ use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
-class DepartmentController extends Controller
+class DepartmentController extends BaseApiController
 {
     public function index()
     {
@@ -32,32 +32,32 @@ class DepartmentController extends Controller
             ->defaultSort('name')
             ->get();
 
-        return response()->json($departments);
+        return $this->success($departments);
     }
 
     public function store(StoreDepartmentRequest $request)
     {
         $department = Department::create($request->validated());
 
-        return response()->json($department->load(['faculty', 'head', 'programs']), Response::HTTP_CREATED);
+        return $this->success($department->load(['faculty', 'head', 'programs']), 'Department created', Response::HTTP_CREATED);
     }
 
     public function show(Department $department)
     {
-        return response()->json($department->load(['faculty', 'head', 'programs']));
+        return $this->success($department->load(['faculty', 'head', 'programs']));
     }
 
     public function update(UpdateDepartmentRequest $request, Department $department)
     {
         $department->update($request->validated());
 
-        return response()->json($department->refresh()->load(['faculty', 'head', 'programs']));
+        return $this->success($department->refresh()->load(['faculty', 'head', 'programs']), 'Department updated');
     }
 
     public function destroy(Department $department)
     {
         $department->delete();
 
-        return response()->noContent();
+        return $this->success(null, 'Department deleted');
     }
 }

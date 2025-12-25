@@ -36,12 +36,13 @@ class DepartmentApiTest extends TestCase
 
         $createResponse = $this->postJson('/api/v1/departments', $payload);
         $createResponse->assertStatus(201)
-            ->assertJsonPath('name', 'Computer Science')
-            ->assertJsonPath('code', 'CS')
-            ->assertJsonPath('faculty_id', $faculty->id)
-            ->assertJsonPath('head_id', $head->id);
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.name', 'Computer Science')
+            ->assertJsonPath('data.code', 'CS')
+            ->assertJsonPath('data.faculty_id', $faculty->id)
+            ->assertJsonPath('data.head_id', $head->id);
 
-        $departmentId = $createResponse->json('id');
+        $departmentId = $createResponse->json('data.id');
 
         $this->assertDatabaseHas('departments', [
             'id' => $departmentId,
@@ -50,19 +51,21 @@ class DepartmentApiTest extends TestCase
 
         $this->getJson('/api/v1/departments')
             ->assertOk()
-            ->assertJsonCount(1);
+            ->assertJsonPath('success', true)
+            ->assertJsonCount(1, 'data');
 
         $this->getJson("/api/v1/departments/{$departmentId}")
             ->assertOk()
-            ->assertJsonPath('id', $departmentId);
+            ->assertJsonPath('data.id', $departmentId);
 
         $this->putJson("/api/v1/departments/{$departmentId}", [
             'name' => 'Computing',
         ])->assertOk()
-            ->assertJsonPath('name', 'Computing');
+            ->assertJsonPath('data.name', 'Computing');
 
         $this->deleteJson("/api/v1/departments/{$departmentId}")
-            ->assertNoContent();
+            ->assertOk()
+            ->assertJsonPath('success', true);
 
         $this->assertSoftDeleted('departments', [
             'id' => $departmentId,

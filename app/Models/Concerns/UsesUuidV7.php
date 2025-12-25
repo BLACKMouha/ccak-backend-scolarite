@@ -9,8 +9,11 @@ trait UsesUuidV7
 {
     use HasUuids;
 
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public function initializeUsesUuidV7(): void
+    {
+        $this->incrementing = false;
+        $this->keyType = 'string';
+    }
 
     public function newUniqueId(): string
     {

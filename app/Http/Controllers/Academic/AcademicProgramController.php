@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Academic;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\BaseApiController;
 use App\Http\Requests\Academic\StoreAcademicProgramRequest;
 use App\Http\Requests\Academic\UpdateAcademicProgramRequest;
 use App\Models\AcademicProgram;
@@ -10,7 +10,7 @@ use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
-class AcademicProgramController extends Controller
+class AcademicProgramController extends BaseApiController
 {
     public function index()
     {
@@ -33,32 +33,32 @@ class AcademicProgramController extends Controller
             ->defaultSort('name')
             ->get();
 
-        return response()->json($programs);
+        return $this->success($programs);
     }
 
     public function store(StoreAcademicProgramRequest $request)
     {
         $program = AcademicProgram::create($request->validated());
 
-        return response()->json($program->load(['department', 'courseUnits']), Response::HTTP_CREATED);
+        return $this->success($program->load(['department', 'courseUnits']), 'Academic program created', Response::HTTP_CREATED);
     }
 
     public function show(AcademicProgram $academicProgram)
     {
-        return response()->json($academicProgram->load(['department', 'courseUnits']));
+        return $this->success($academicProgram->load(['department', 'courseUnits']));
     }
 
     public function update(UpdateAcademicProgramRequest $request, AcademicProgram $academicProgram)
     {
         $academicProgram->update($request->validated());
 
-        return response()->json($academicProgram->refresh()->load(['department', 'courseUnits']));
+        return $this->success($academicProgram->refresh()->load(['department', 'courseUnits']), 'Academic program updated');
     }
 
     public function destroy(AcademicProgram $academicProgram)
     {
         $academicProgram->delete();
 
-        return response()->noContent();
+        return $this->success(null, 'Academic program deleted');
     }
 }

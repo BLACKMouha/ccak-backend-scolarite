@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Academic;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\BaseApiController;
 use App\Http\Requests\Academic\StoreCourseUnitRequest;
 use App\Http\Requests\Academic\UpdateCourseUnitRequest;
 use App\Models\CourseUnit;
@@ -10,7 +10,7 @@ use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
-class CourseUnitController extends Controller
+class CourseUnitController extends BaseApiController
 {
     public function index()
     {
@@ -33,32 +33,32 @@ class CourseUnitController extends Controller
             ->defaultSort('semester_number')
             ->get();
 
-        return response()->json($units);
+        return $this->success($units);
     }
 
     public function store(StoreCourseUnitRequest $request)
     {
         $unit = CourseUnit::create($request->validated());
 
-        return response()->json($unit->load(['academicProgram', 'courses']), Response::HTTP_CREATED);
+        return $this->success($unit->load(['academicProgram', 'courses']), 'Course unit created', Response::HTTP_CREATED);
     }
 
     public function show(CourseUnit $courseUnit)
     {
-        return response()->json($courseUnit->load(['academicProgram', 'courses']));
+        return $this->success($courseUnit->load(['academicProgram', 'courses']));
     }
 
     public function update(UpdateCourseUnitRequest $request, CourseUnit $courseUnit)
     {
         $courseUnit->update($request->validated());
 
-        return response()->json($courseUnit->refresh()->load(['academicProgram', 'courses']));
+        return $this->success($courseUnit->refresh()->load(['academicProgram', 'courses']), 'Course unit updated');
     }
 
     public function destroy(CourseUnit $courseUnit)
     {
         $courseUnit->delete();
 
-        return response()->noContent();
+        return $this->success(null, 'Course unit deleted');
     }
 }

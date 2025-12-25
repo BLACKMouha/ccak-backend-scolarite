@@ -39,12 +39,13 @@ class CourseApiTest extends TestCase
 
         $createResponse = $this->postJson('/api/v1/courses', $payload);
         $createResponse->assertStatus(201)
-            ->assertJsonPath('name', 'Intro to CS')
-            ->assertJsonPath('code', 'CS101')
-            ->assertJsonPath('course_unit_id', $courseUnit->id)
-            ->assertJsonPath('prerequisites.0', $prerequisite->id);
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.name', 'Intro to CS')
+            ->assertJsonPath('data.code', 'CS101')
+            ->assertJsonPath('data.course_unit_id', $courseUnit->id)
+            ->assertJsonPath('data.prerequisites.0', $prerequisite->id);
 
-        $courseId = $createResponse->json('id');
+        $courseId = $createResponse->json('data.id');
 
         $this->assertDatabaseHas('courses', [
             'id' => $courseId,
@@ -53,20 +54,22 @@ class CourseApiTest extends TestCase
 
         $this->getJson('/api/v1/courses')
             ->assertOk()
-            ->assertJsonCount(2);
+            ->assertJsonPath('success', true)
+            ->assertJsonCount(2, 'data');
 
         $this->getJson("/api/v1/courses/{$courseId}")
             ->assertOk()
-            ->assertJsonPath('id', $courseId);
+            ->assertJsonPath('data.id', $courseId);
 
         $this->putJson("/api/v1/courses/{$courseId}", [
             'name' => 'Intro to Computing',
             'prerequisites' => [],
         ])->assertOk()
-            ->assertJsonPath('name', 'Intro to Computing');
+            ->assertJsonPath('data.name', 'Intro to Computing');
 
         $this->deleteJson("/api/v1/courses/{$courseId}")
-            ->assertNoContent();
+            ->assertOk()
+            ->assertJsonPath('success', true);
 
         $this->assertDatabaseMissing('courses', [
             'id' => $courseId,

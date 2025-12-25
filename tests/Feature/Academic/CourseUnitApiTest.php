@@ -35,11 +35,12 @@ class CourseUnitApiTest extends TestCase
 
         $createResponse = $this->postJson('/api/v1/course-units', $payload);
         $createResponse->assertStatus(201)
-            ->assertJsonPath('name', 'Algorithms')
-            ->assertJsonPath('code', 'UE101')
-            ->assertJsonPath('academic_program_id', $program->id);
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.name', 'Algorithms')
+            ->assertJsonPath('data.code', 'UE101')
+            ->assertJsonPath('data.academic_program_id', $program->id);
 
-        $unitId = $createResponse->json('id');
+        $unitId = $createResponse->json('data.id');
 
         $this->assertDatabaseHas('course_units', [
             'id' => $unitId,
@@ -48,19 +49,21 @@ class CourseUnitApiTest extends TestCase
 
         $this->getJson('/api/v1/course-units')
             ->assertOk()
-            ->assertJsonCount(1);
+            ->assertJsonPath('success', true)
+            ->assertJsonCount(1, 'data');
 
         $this->getJson("/api/v1/course-units/{$unitId}")
             ->assertOk()
-            ->assertJsonPath('id', $unitId);
+            ->assertJsonPath('data.id', $unitId);
 
         $this->putJson("/api/v1/course-units/{$unitId}", [
             'credits' => 9,
         ])->assertOk()
-            ->assertJsonPath('credits', 9);
+            ->assertJsonPath('data.credits', 9);
 
         $this->deleteJson("/api/v1/course-units/{$unitId}")
-            ->assertNoContent();
+            ->assertOk()
+            ->assertJsonPath('success', true);
 
         $this->assertDatabaseMissing('course_units', [
             'id' => $unitId,

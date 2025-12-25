@@ -34,11 +34,12 @@ class AcademicProgramApiTest extends TestCase
 
         $createResponse = $this->postJson('/api/v1/academic-programs', $payload);
         $createResponse->assertStatus(201)
-            ->assertJsonPath('name', 'Computer Engineering')
-            ->assertJsonPath('level', AcademicProgram::LEVELS[0])
-            ->assertJsonPath('department_id', $department->id);
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.name', 'Computer Engineering')
+            ->assertJsonPath('data.level', AcademicProgram::LEVELS[0])
+            ->assertJsonPath('data.department_id', $department->id);
 
-        $programId = $createResponse->json('id');
+        $programId = $createResponse->json('data.id');
 
         $this->assertDatabaseHas('academic_programs', [
             'id' => $programId,
@@ -47,19 +48,21 @@ class AcademicProgramApiTest extends TestCase
 
         $this->getJson('/api/v1/academic-programs')
             ->assertOk()
-            ->assertJsonCount(1);
+            ->assertJsonPath('success', true)
+            ->assertJsonCount(1, 'data');
 
         $this->getJson("/api/v1/academic-programs/{$programId}")
             ->assertOk()
-            ->assertJsonPath('id', $programId);
+            ->assertJsonPath('data.id', $programId);
 
         $this->putJson("/api/v1/academic-programs/{$programId}", [
             'level' => AcademicProgram::LEVELS[1],
         ])->assertOk()
-            ->assertJsonPath('level', AcademicProgram::LEVELS[1]);
+            ->assertJsonPath('data.level', AcademicProgram::LEVELS[1]);
 
         $this->deleteJson("/api/v1/academic-programs/{$programId}")
-            ->assertNoContent();
+            ->assertOk()
+            ->assertJsonPath('success', true);
 
         $this->assertDatabaseMissing('academic_programs', [
             'id' => $programId,

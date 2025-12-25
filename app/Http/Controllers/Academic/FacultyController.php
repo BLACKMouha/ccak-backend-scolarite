@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Academic;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\BaseApiController;
 use App\Http\Requests\Academic\StoreFacultyRequest;
 use App\Http\Requests\Academic\UpdateFacultyRequest;
 use App\Models\Faculty;
@@ -10,7 +10,7 @@ use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
-class FacultyController extends Controller
+class FacultyController extends BaseApiController
 {
     public function index()
     {
@@ -42,32 +42,32 @@ class FacultyController extends Controller
             ->defaultSort('name')
             ->get();
 
-        return response()->json($faculties);
+        return $this->success($faculties);
     }
 
     public function store(StoreFacultyRequest $request)
     {
         $faculty = Faculty::create($request->validated());
 
-        return response()->json($faculty->load(['dean', 'departments']), Response::HTTP_CREATED);
+        return $this->success($faculty->load(['dean', 'departments']), 'Faculty created', Response::HTTP_CREATED);
     }
 
     public function show(Faculty $faculty)
     {
-        return response()->json($faculty->load(['dean', 'departments']));
+        return $this->success($faculty->load(['dean', 'departments']));
     }
 
     public function update(UpdateFacultyRequest $request, Faculty $faculty)
     {
         $faculty->update($request->validated());
 
-        return response()->json($faculty->refresh()->load(['dean', 'departments']));
+        return $this->success($faculty->refresh()->load(['dean', 'departments']), 'Faculty updated');
     }
 
     public function destroy(Faculty $faculty)
     {
         $faculty->delete();
 
-        return response()->noContent();
+        return $this->success(null, 'Faculty deleted');
     }
 }
