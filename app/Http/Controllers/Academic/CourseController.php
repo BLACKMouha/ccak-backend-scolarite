@@ -12,6 +12,14 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class CourseController extends BaseApiController
 {
+    public function __construct()
+    {
+        $this->middleware('permission:courses.view')->only(['index', 'show']);
+        $this->middleware('permission:courses.create')->only('store');
+        $this->middleware('permission:courses.update')->only('update');
+        $this->middleware('permission:courses.delete')->only('destroy');
+    }
+
     public function index()
     {
         $courses = QueryBuilder::for(Course::query())
@@ -33,7 +41,7 @@ class CourseController extends BaseApiController
                         return;
                     }
 
-                    $query->whereHas('courseUnit.academicProgram', fn ($sub) => $sub->where('level', $level));
+                    $query->whereHas('courseUnit.academicProgram', fn($sub) => $sub->where('level', $level));
                 }),
                 AllowedFilter::callback('search', function ($query, $value) {
                     $search = trim((string) $value);

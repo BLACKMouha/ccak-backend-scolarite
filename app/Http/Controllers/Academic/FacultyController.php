@@ -12,6 +12,14 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class FacultyController extends BaseApiController
 {
+    public function __construct()
+    {
+        $this->middleware('permission:faculties.view')->only(['index', 'show']);
+        $this->middleware('permission:faculties.create')->only('store');
+        $this->middleware('permission:faculties.update')->only('update');
+        $this->middleware('permission:faculties.delete')->only('destroy');
+    }
+
     public function index()
     {
         $faculties = QueryBuilder::for(Faculty::query())

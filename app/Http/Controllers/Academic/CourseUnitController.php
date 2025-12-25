@@ -12,6 +12,14 @@ use Spatie\QueryBuilder\QueryBuilder;
 
 class CourseUnitController extends BaseApiController
 {
+    public function __construct()
+    {
+        $this->middleware('permission:course_units.view')->only(['index', 'show']);
+        $this->middleware('permission:course_units.create')->only('store');
+        $this->middleware('permission:course_units.update')->only('update');
+        $this->middleware('permission:course_units.delete')->only('destroy');
+    }
+
     public function index()
     {
         $units = QueryBuilder::for(CourseUnit::query())

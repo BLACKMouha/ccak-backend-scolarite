@@ -1,0 +1,189 @@
+<?php
+
+namespace App\Support;
+
+final class PermissionCatalog
+{
+    public const ROLES = ['ADMIN', 'STAFF', 'FACULTY', 'STUDENT'];
+
+    public static function permissions(): array
+    {
+        return [
+            // Academic structure
+            'faculties.view',
+            'faculties.create',
+            'faculties.update',
+            'faculties.delete',
+            'departments.view',
+            'departments.create',
+            'departments.update',
+            'departments.delete',
+            'academic_programs.view',
+            'academic_programs.create',
+            'academic_programs.update',
+            'academic_programs.delete',
+            'course_units.view',
+            'course_units.create',
+            'course_units.update',
+            'course_units.delete',
+            'courses.view',
+            'courses.create',
+            'courses.update',
+            'courses.delete',
+
+            // Enrollment & student records
+            'enrollments.view',
+            'enrollments.create',
+            'enrollments.update',
+            'enrollments.delete',
+            'registrations.view',
+            'registrations.create',
+            'registrations.update',
+            'registrations.delete',
+            'student_records.view',
+            'student_records.update',
+
+            // Grades & deliberations
+            'grades.view',
+            'grades.create',
+            'grades.update',
+            'grades.delete',
+            'assessments.view',
+            'assessments.create',
+            'assessments.update',
+            'assessments.delete',
+            'deliberations.view',
+            'deliberations.create',
+            'deliberations.update',
+            'deliberations.delete',
+            'transcripts.view',
+            'transcripts.create',
+            'transcripts.update',
+            'transcripts.delete',
+
+            // Finance
+            'invoices.view',
+            'invoices.create',
+            'invoices.update',
+            'invoices.delete',
+            'payments.view',
+            'payments.create',
+            'payments.update',
+            'payments.delete',
+            'scholarships.view',
+            'scholarships.create',
+            'scholarships.update',
+            'scholarships.delete',
+
+            // Documents
+            'documents.view',
+            'documents.create',
+            'documents.update',
+            'documents.delete',
+            'document_requests.view',
+            'document_requests.create',
+            'document_requests.update',
+            'document_requests.delete',
+
+            // Operations
+            'attendance.view',
+            'attendance.create',
+            'attendance.update',
+            'attendance.delete',
+            'timetables.view',
+            'timetables.create',
+            'timetables.update',
+            'timetables.delete',
+            'reports.view',
+            'reports.create',
+            'reports.update',
+            'reports.delete',
+
+            // Administration
+            'users.view',
+            'users.create',
+            'users.update',
+            'users.delete',
+            'users.assign_roles',
+            'roles.view',
+            'roles.manage',
+            'permissions.view',
+            'settings.view',
+            'settings.update',
+        ];
+    }
+
+    public static function rolePermissions(): array
+    {
+        $allPermissions = self::permissions();
+
+        return [
+            'ADMIN' => $allPermissions,
+            'STAFF' => [
+                'faculties.view',
+                'departments.view',
+                'academic_programs.view',
+                'course_units.view',
+                'courses.view',
+                'enrollments.view',
+                'enrollments.create',
+                'enrollments.update',
+                'registrations.view',
+                'registrations.create',
+                'registrations.update',
+                'student_records.view',
+                'grades.view',
+                'transcripts.view',
+                'documents.view',
+                'documents.create',
+                'documents.update',
+                'document_requests.view',
+                'document_requests.create',
+                'document_requests.update',
+                'invoices.view',
+                'invoices.create',
+                'invoices.update',
+                'payments.view',
+                'payments.create',
+                'payments.update',
+                'reports.view',
+                'settings.view',
+            ],
+            'FACULTY' => [
+                'faculties.view',
+                'departments.view',
+                'academic_programs.view',
+                'course_units.view',
+                'courses.view',
+                'courses.create',
+                'courses.update',
+                'assessments.view',
+                'assessments.create',
+                'assessments.update',
+                'grades.view',
+                'grades.create',
+                'grades.update',
+                'deliberations.view',
+                'attendance.view',
+                'attendance.create',
+                'attendance.update',
+                'reports.view',
+            ],
+            'STUDENT' => [
+                'faculties.view',
+                'departments.view',
+                'academic_programs.view',
+                'course_units.view',
+                'courses.view',
+                'enrollments.view',
+                'registrations.view',
+                'grades.view',
+                'transcripts.view',
+                'documents.view',
+                'document_requests.view',
+                'document_requests.create',
+                'reports.view',
+            ],
+        ];
+    }
+}

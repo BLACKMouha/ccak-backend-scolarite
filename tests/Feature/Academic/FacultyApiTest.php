@@ -5,11 +5,20 @@ namespace Tests\Feature\Academic;
 use App\Http\Middleware\KeycloakAuthenticate;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\InteractsWithPermissions;
 use Tests\TestCase;
 
 class FacultyApiTest extends TestCase
 {
     use RefreshDatabase;
+    use InteractsWithPermissions;
+
+    private array $permissions = [
+        'faculties.view',
+        'faculties.create',
+        'faculties.update',
+        'faculties.delete',
+    ];
 
     protected function setUp(): void
     {
@@ -20,6 +29,8 @@ class FacultyApiTest extends TestCase
 
     public function test_can_crud_faculties(): void
     {
+        $this->actingAsUserWithPermissions($this->permissions);
+
         $dean = User::factory()->create([
             'user_type' => 'STAFF',
         ]);
@@ -75,8 +86,20 @@ class FacultyApiTest extends TestCase
 
     public function test_faculty_requires_name_and_code(): void
     {
+        $this->actingAsUserWithPermissions($this->permissions);
+
         $this->postJson('/api/v1/faculties', [])
             ->assertStatus(422)
             ->assertJsonValidationErrors(['name', 'code']);
+    }
+
+    public function test_faculty_requires_permission(): void
+    {
+        $this->seedPermissions($this->permissions);
+
+        $this->actingAs(User::factory()->create());
+
+        $this->getJson('/api/v1/faculties')
+            ->assertStatus(403);
     }
 }

@@ -5,12 +5,22 @@ namespace Tests\Feature\Academic;
 use App\Http\Middleware\KeycloakAuthenticate;
 use App\Models\AcademicProgram;
 use App\Models\Department;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\InteractsWithPermissions;
 use Tests\TestCase;
 
 class AcademicProgramApiTest extends TestCase
 {
     use RefreshDatabase;
+    use InteractsWithPermissions;
+
+    private array $permissions = [
+        'academic_programs.view',
+        'academic_programs.create',
+        'academic_programs.update',
+        'academic_programs.delete',
+    ];
 
     protected function setUp(): void
     {
@@ -21,6 +31,8 @@ class AcademicProgramApiTest extends TestCase
 
     public function test_can_crud_academic_programs(): void
     {
+        $this->actingAsUserWithPermissions($this->permissions);
+
         $department = Department::factory()->create();
 
         $payload = [
@@ -71,6 +83,8 @@ class AcademicProgramApiTest extends TestCase
 
     public function test_academic_program_requires_valid_level(): void
     {
+        $this->actingAsUserWithPermissions($this->permissions);
+
         $department = Department::factory()->create();
 
         $this->postJson('/api/v1/academic-programs', [
@@ -81,5 +95,15 @@ class AcademicProgramApiTest extends TestCase
             'total_credits_required' => 180,
         ])->assertStatus(422)
             ->assertJsonValidationErrors(['level']);
+    }
+
+    public function test_academic_program_requires_permission(): void
+    {
+        $this->seedPermissions($this->permissions);
+
+        $this->actingAs(User::factory()->create());
+
+        $this->getJson('/api/v1/academic-programs')
+            ->assertStatus(403);
     }
 }

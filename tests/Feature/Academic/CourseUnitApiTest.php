@@ -5,12 +5,22 @@ namespace Tests\Feature\Academic;
 use App\Http\Middleware\KeycloakAuthenticate;
 use App\Models\AcademicProgram;
 use App\Models\CourseUnit;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\InteractsWithPermissions;
 use Tests\TestCase;
 
 class CourseUnitApiTest extends TestCase
 {
     use RefreshDatabase;
+    use InteractsWithPermissions;
+
+    private array $permissions = [
+        'course_units.view',
+        'course_units.create',
+        'course_units.update',
+        'course_units.delete',
+    ];
 
     protected function setUp(): void
     {
@@ -21,6 +31,8 @@ class CourseUnitApiTest extends TestCase
 
     public function test_can_crud_course_units(): void
     {
+        $this->actingAsUserWithPermissions($this->permissions);
+
         $program = AcademicProgram::factory()->create();
 
         $payload = [
@@ -72,6 +84,8 @@ class CourseUnitApiTest extends TestCase
 
     public function test_course_unit_requires_valid_type(): void
     {
+        $this->actingAsUserWithPermissions($this->permissions);
+
         $program = AcademicProgram::factory()->create();
 
         $this->postJson('/api/v1/course-units', [
@@ -83,5 +97,15 @@ class CourseUnitApiTest extends TestCase
             'type' => 'ELECTIVE',
         ])->assertStatus(422)
             ->assertJsonValidationErrors(['type']);
+    }
+
+    public function test_course_unit_requires_permission(): void
+    {
+        $this->seedPermissions($this->permissions);
+
+        $this->actingAs(User::factory()->create());
+
+        $this->getJson('/api/v1/course-units')
+            ->assertStatus(403);
     }
 }
