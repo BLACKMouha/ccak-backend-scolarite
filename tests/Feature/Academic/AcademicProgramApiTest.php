@@ -32,7 +32,7 @@ class AcademicProgramApiTest extends TestCase
             'is_active' => true,
         ];
 
-        $createResponse = $this->postJson('/api/academic-programs', $payload);
+        $createResponse = $this->postJson('/api/v1/academic-programs', $payload);
         $createResponse->assertStatus(201)
             ->assertJsonPath('name', 'Computer Engineering')
             ->assertJsonPath('level', AcademicProgram::LEVELS[0])
@@ -45,20 +45,20 @@ class AcademicProgramApiTest extends TestCase
             'level' => AcademicProgram::LEVELS[0],
         ]);
 
-        $this->getJson('/api/academic-programs')
+        $this->getJson('/api/v1/academic-programs')
             ->assertOk()
             ->assertJsonCount(1);
 
-        $this->getJson("/api/academic-programs/{$programId}")
+        $this->getJson("/api/v1/academic-programs/{$programId}")
             ->assertOk()
             ->assertJsonPath('id', $programId);
 
-        $this->putJson("/api/academic-programs/{$programId}", [
+        $this->putJson("/api/v1/academic-programs/{$programId}", [
             'level' => AcademicProgram::LEVELS[1],
         ])->assertOk()
             ->assertJsonPath('level', AcademicProgram::LEVELS[1]);
 
-        $this->deleteJson("/api/academic-programs/{$programId}")
+        $this->deleteJson("/api/v1/academic-programs/{$programId}")
             ->assertNoContent();
 
         $this->assertDatabaseMissing('academic_programs', [
@@ -70,7 +70,7 @@ class AcademicProgramApiTest extends TestCase
     {
         $department = Department::factory()->create();
 
-        $this->postJson('/api/academic-programs', [
+        $this->postJson('/api/v1/academic-programs', [
             'department_id' => $department->id,
             'name' => 'Invalid Program',
             'level' => 'PHD',

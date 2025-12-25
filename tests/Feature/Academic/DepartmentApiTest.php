@@ -34,7 +34,7 @@ class DepartmentApiTest extends TestCase
             'is_active' => true,
         ];
 
-        $createResponse = $this->postJson('/api/departments', $payload);
+        $createResponse = $this->postJson('/api/v1/departments', $payload);
         $createResponse->assertStatus(201)
             ->assertJsonPath('name', 'Computer Science')
             ->assertJsonPath('code', 'CS')
@@ -48,20 +48,20 @@ class DepartmentApiTest extends TestCase
             'code' => 'CS',
         ]);
 
-        $this->getJson('/api/departments')
+        $this->getJson('/api/v1/departments')
             ->assertOk()
             ->assertJsonCount(1);
 
-        $this->getJson("/api/departments/{$departmentId}")
+        $this->getJson("/api/v1/departments/{$departmentId}")
             ->assertOk()
             ->assertJsonPath('id', $departmentId);
 
-        $this->putJson("/api/departments/{$departmentId}", [
+        $this->putJson("/api/v1/departments/{$departmentId}", [
             'name' => 'Computing',
         ])->assertOk()
             ->assertJsonPath('name', 'Computing');
 
-        $this->deleteJson("/api/departments/{$departmentId}")
+        $this->deleteJson("/api/v1/departments/{$departmentId}")
             ->assertNoContent();
 
         $this->assertSoftDeleted('departments', [
@@ -71,7 +71,7 @@ class DepartmentApiTest extends TestCase
 
     public function test_department_requires_faculty(): void
     {
-        $this->postJson('/api/departments', [
+        $this->postJson('/api/v1/departments', [
             'name' => 'Mathematics',
             'code' => 'MATH',
         ])->assertStatus(422)

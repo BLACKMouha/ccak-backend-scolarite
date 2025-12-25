@@ -31,7 +31,7 @@ class FacultyApiTest extends TestCase
             'is_active' => true,
         ];
 
-        $createResponse = $this->postJson('/api/faculties', $payload);
+        $createResponse = $this->postJson('/api/v1/faculties', $payload);
         $createResponse->assertStatus(201)
             ->assertJsonPath('name', 'Engineering')
             ->assertJsonPath('code', 'ENG')
@@ -44,11 +44,11 @@ class FacultyApiTest extends TestCase
             'code' => 'ENG',
         ]);
 
-        $this->getJson('/api/faculties')
+        $this->getJson('/api/v1/faculties')
             ->assertOk()
             ->assertJsonCount(1);
 
-        $this->getJson("/api/faculties/{$facultyId}")
+        $this->getJson("/api/v1/faculties/{$facultyId}")
             ->assertOk()
             ->assertJsonPath('id', $facultyId);
 
@@ -57,12 +57,12 @@ class FacultyApiTest extends TestCase
             'code' => 'ENGT',
         ];
 
-        $this->putJson("/api/faculties/{$facultyId}", $updatePayload)
+        $this->putJson("/api/v1/faculties/{$facultyId}", $updatePayload)
             ->assertOk()
             ->assertJsonPath('name', 'Engineering & Technology')
             ->assertJsonPath('code', 'ENGT');
 
-        $this->deleteJson("/api/faculties/{$facultyId}")
+        $this->deleteJson("/api/v1/faculties/{$facultyId}")
             ->assertNoContent();
 
         $this->assertDatabaseMissing('faculties', [
@@ -72,7 +72,7 @@ class FacultyApiTest extends TestCase
 
     public function test_faculty_requires_name_and_code(): void
     {
-        $this->postJson('/api/faculties', [])
+        $this->postJson('/api/v1/faculties', [])
             ->assertStatus(422)
             ->assertJsonValidationErrors(['name', 'code']);
     }

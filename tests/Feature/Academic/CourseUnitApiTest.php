@@ -33,7 +33,7 @@ class CourseUnitApiTest extends TestCase
             'is_active' => true,
         ];
 
-        $createResponse = $this->postJson('/api/course-units', $payload);
+        $createResponse = $this->postJson('/api/v1/course-units', $payload);
         $createResponse->assertStatus(201)
             ->assertJsonPath('name', 'Algorithms')
             ->assertJsonPath('code', 'UE101')
@@ -46,20 +46,20 @@ class CourseUnitApiTest extends TestCase
             'code' => 'UE101',
         ]);
 
-        $this->getJson('/api/course-units')
+        $this->getJson('/api/v1/course-units')
             ->assertOk()
             ->assertJsonCount(1);
 
-        $this->getJson("/api/course-units/{$unitId}")
+        $this->getJson("/api/v1/course-units/{$unitId}")
             ->assertOk()
             ->assertJsonPath('id', $unitId);
 
-        $this->putJson("/api/course-units/{$unitId}", [
+        $this->putJson("/api/v1/course-units/{$unitId}", [
             'credits' => 9,
         ])->assertOk()
             ->assertJsonPath('credits', 9);
 
-        $this->deleteJson("/api/course-units/{$unitId}")
+        $this->deleteJson("/api/v1/course-units/{$unitId}")
             ->assertNoContent();
 
         $this->assertDatabaseMissing('course_units', [
@@ -71,7 +71,7 @@ class CourseUnitApiTest extends TestCase
     {
         $program = AcademicProgram::factory()->create();
 
-        $this->postJson('/api/course-units', [
+        $this->postJson('/api/v1/course-units', [
             'academic_program_id' => $program->id,
             'code' => 'UE102',
             'name' => 'Invalid Type',

@@ -37,7 +37,7 @@ class CourseApiTest extends TestCase
             'is_active' => true,
         ];
 
-        $createResponse = $this->postJson('/api/courses', $payload);
+        $createResponse = $this->postJson('/api/v1/courses', $payload);
         $createResponse->assertStatus(201)
             ->assertJsonPath('name', 'Intro to CS')
             ->assertJsonPath('code', 'CS101')
@@ -51,21 +51,21 @@ class CourseApiTest extends TestCase
             'code' => 'CS101',
         ]);
 
-        $this->getJson('/api/courses')
+        $this->getJson('/api/v1/courses')
             ->assertOk()
             ->assertJsonCount(2);
 
-        $this->getJson("/api/courses/{$courseId}")
+        $this->getJson("/api/v1/courses/{$courseId}")
             ->assertOk()
             ->assertJsonPath('id', $courseId);
 
-        $this->putJson("/api/courses/{$courseId}", [
+        $this->putJson("/api/v1/courses/{$courseId}", [
             'name' => 'Intro to Computing',
             'prerequisites' => [],
         ])->assertOk()
             ->assertJsonPath('name', 'Intro to Computing');
 
-        $this->deleteJson("/api/courses/{$courseId}")
+        $this->deleteJson("/api/v1/courses/{$courseId}")
             ->assertNoContent();
 
         $this->assertDatabaseMissing('courses', [
@@ -75,7 +75,7 @@ class CourseApiTest extends TestCase
 
     public function test_course_requires_course_unit_and_valid_prerequisites(): void
     {
-        $this->postJson('/api/courses', [
+        $this->postJson('/api/v1/courses', [
             'code' => 'CS201',
             'name' => 'Data Structures',
             'credits' => 4,
