@@ -14,7 +14,7 @@ return [
     */
 
     'defaults' => [
-        'guard' => env('AUTH_GUARD', 'web'),
+        'guard' => env('AUTH_GUARD', 'api'),
         'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
     ],
 
@@ -40,9 +40,13 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'api' => [
+            'driver' => 'keycloak',
+            'provider' => 'keycloak_users',
+        ],
         'keycloak' => [
-            'driver' => 'session',
-            'provider' => 'users',
+            'driver' => 'keycloak',
+            'provider' => 'keycloak_users',
         ],
     ],
 
@@ -66,6 +70,10 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
+            'model' => env('AUTH_MODEL', App\Models\User::class),
+        ],
+        'keycloak_users' => [
+            'driver' => 'keycloak-eloquent',
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
 

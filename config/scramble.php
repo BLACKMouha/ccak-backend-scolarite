@@ -2,6 +2,8 @@
 
 use Dedoc\Scramble\Http\Middleware\RestrictedDocsAccess;
 
+$requireAuth = env('SCRAMBLE_REQUIRE_AUTH', false);
+
 return [
     /*
      * Your API path. By default, all routes starting with this path will be added to the docs.
@@ -127,10 +129,13 @@ return [
      */
     'flatten_deep_query_parameters' => true,
 
-    'middleware' => [
+    'require_auth' => $requireAuth,
+
+    'middleware' => array_values(array_filter([
         'web',
+        $requireAuth ? 'auth:api' : null,
         RestrictedDocsAccess::class,
-    ],
+    ])),
 
     'extensions' => [],
 ];
