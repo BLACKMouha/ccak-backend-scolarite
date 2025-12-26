@@ -28,7 +28,7 @@ class UserRoleApiTest extends TestCase
     {
         $this->actingAsUserWithPermissions($this->permissions);
 
-        Role::create(['name' => 'STUDENT', 'guard_name' => 'web']);
+        Role::create(['name' => 'STUDENT', 'guard_name' => config('auth.defaults.guard', 'api')]);
 
         $user = User::factory()->create();
 
@@ -47,7 +47,7 @@ class UserRoleApiTest extends TestCase
 
         $this->actingAs(User::factory()->create());
 
-        Role::create(['name' => 'STUDENT', 'guard_name' => 'web']);
+        Role::create(['name' => 'STUDENT', 'guard_name' => config('auth.defaults.guard', 'api')]);
 
         $user = User::factory()->create();
 

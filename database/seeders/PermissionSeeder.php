@@ -10,24 +10,23 @@ use Spatie\Permission\PermissionRegistrar;
 
 class PermissionSeeder extends Seeder
 {
-    private const GUARD = 'web';
-
     public function run(): void
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
+        $guard = config('auth.defaults.guard', 'api');
         $permissions = PermissionCatalog::permissions();
         foreach ($permissions as $permission) {
             Permission::firstOrCreate([
                 'name' => $permission,
-                'guard_name' => self::GUARD,
+                'guard_name' => $guard,
             ]);
         }
 
         foreach (PermissionCatalog::rolePermissions() as $roleName => $rolePermissions) {
             $role = Role::firstOrCreate([
                 'name' => $roleName,
-                'guard_name' => self::GUARD,
+                'guard_name' => $guard,
             ]);
 
             $role->syncPermissions($rolePermissions);
