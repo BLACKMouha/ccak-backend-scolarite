@@ -316,6 +316,8 @@
                     </p>
                     <div class="cta">
                         <a class="btn primary" href="{{ url('/docs/api') }}">Open API docs</a>
+                        <a class="btn ghost" href="https://si-api.ucak.sn" target="_blank" rel="noopener noreferrer">Production API</a>
+                        <a class="btn ghost" href="https://back-office.ucak.sn" target="_blank" rel="noopener noreferrer">Back Office</a>
                     </div>
                     <p class="api-base">API base: <code>/api/v1</code></p>
                     <dl class="meta">
