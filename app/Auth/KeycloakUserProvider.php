@@ -90,23 +90,7 @@ class KeycloakUserProvider extends EloquentUserProvider
 
         $allowedRolesSet = array_fill_keys($allowedRoles, true);
         $roles = $this->extractAllowedRoles($claims, $allowedRolesSet);
-
-        if (! empty($roles)) {
-            return $roles[0];
-        }
-
-        $claimKey = config('keycloak.user_type_claim');
-        if (is_string($claimKey) && $claimKey !== '') {
-            $claimValue = data_get($claims, $claimKey);
-            if (is_string($claimValue) && $claimValue !== '') {
-                $candidate = strtoupper($claimValue);
-                if (isset($allowedRolesSet[$candidate])) {
-                    return $candidate;
-                }
-            }
-        }
-
-        return null;
+        return $roles[0] ?? null;
     }
 
     private function extractAllowedRoles(array $claims, array $allowedRolesSet): array

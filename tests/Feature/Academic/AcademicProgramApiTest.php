@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Academic;
 
-use App\Http\Middleware\KeycloakAuthenticate;
 use App\Models\AcademicProgram;
 use App\Models\Department;
 use App\Models\User;
@@ -26,7 +25,7 @@ class AcademicProgramApiTest extends TestCase
     {
         parent::setUp();
 
-        $this->withoutMiddleware(KeycloakAuthenticate::class);
+        $this->withoutMiddleware(\Illuminate\Auth\Middleware\Authenticate::class);
     }
 
     public function test_can_crud_academic_programs(): void
