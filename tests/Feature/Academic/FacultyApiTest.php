@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Academic;
 
-use App\Http\Middleware\KeycloakAuthenticate;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\InteractsWithPermissions;
@@ -24,7 +23,7 @@ class FacultyApiTest extends TestCase
     {
         parent::setUp();
 
-        $this->withoutMiddleware(KeycloakAuthenticate::class);
+        $this->withoutMiddleware(\Illuminate\Auth\Middleware\Authenticate::class);
     }
 
     public function test_can_crud_faculties(): void

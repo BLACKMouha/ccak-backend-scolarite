@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserRoleController;
 
-Route::middleware('keycloak')->group(function () {
+Route::middleware('auth:api')->group(function () {
     Route::get('/user', function (Request $request) {
         return response()->json([
             'success' => true,

@@ -133,7 +133,7 @@ return [
 
     'middleware' => array_values(array_filter([
         'web',
-        $requireAuth ? 'keycloak' : null,
+        $requireAuth ? 'auth:api' : null,
         RestrictedDocsAccess::class,
     ])),
 
