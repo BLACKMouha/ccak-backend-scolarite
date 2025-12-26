@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Admin;
 
-use App\Http\Middleware\KeycloakAuthenticate;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -24,7 +23,7 @@ class RoleApiTest extends TestCase
     {
         parent::setUp();
 
-        $this->withoutMiddleware(KeycloakAuthenticate::class);
+        $this->withoutMiddleware(\Illuminate\Auth\Middleware\Authenticate::class);
     }
 
     public function test_can_manage_roles(): void
