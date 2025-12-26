@@ -40,9 +40,15 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
+            $message = $exception->getMessage();
+            $prefix = '[Keycloak Guard] ';
+            if (str_starts_with($message, $prefix)) {
+                $message = substr($message, strlen($prefix));
+            }
+
             return response()->json([
                 'success' => false,
-                'message' => $exception->getMessage(),
+                'message' => $message,
                 'errors' => [],
             ], 401);
         });
