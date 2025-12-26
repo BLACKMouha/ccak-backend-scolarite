@@ -19,6 +19,9 @@
 /storage/*.key
 /storage/pail
 /vendor
+/docker-compose.override.yml
+/docker/php/www.conf
 Homestead.json
 Homestead.yaml
 Thumbs.db
+docker-compose.override.yml.example
