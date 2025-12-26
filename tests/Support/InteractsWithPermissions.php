@@ -11,7 +11,7 @@ trait InteractsWithPermissions
     protected function seedPermissions(array $permissions): void
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
-        $guard = config('auth.defaults.guard');
+        $guard = config('auth.defaults.guard', 'api');
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate([

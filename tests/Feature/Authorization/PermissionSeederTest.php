@@ -24,11 +24,12 @@ class PermissionSeederTest extends TestCase
     {
         $this->seed(PermissionSeeder::class);
 
+        $guard = config('auth.defaults.guard', 'api');
         $allPermissions = PermissionCatalog::permissions();
         $this->assertSame(count($allPermissions), Permission::count());
 
         foreach (PermissionCatalog::rolePermissions() as $roleName => $rolePermissions) {
-            $role = Role::findByName($roleName, config('auth.defaults.guard'));
+            $role = Role::findByName($roleName, $guard);
             $this->assertNotNull($role);
             $this->assertEqualsCanonicalizing(
                 $rolePermissions,
@@ -49,15 +50,16 @@ class PermissionSeederTest extends TestCase
     public function test_user_inherits_permissions_from_role(): void
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $guard = config('auth.defaults.guard', 'api');
 
         $permission = Permission::create([
             'name' => 'faculties.view',
-            'guard_name' => config('auth.defaults.guard'),
+            'guard_name' => $guard,
         ]);
 
         $role = Role::create([
             'name' => 'VIEWER',
-            'guard_name' => config('auth.defaults.guard'),
+            'guard_name' => $guard,
         ]);
 
         $role->givePermissionTo($permission);

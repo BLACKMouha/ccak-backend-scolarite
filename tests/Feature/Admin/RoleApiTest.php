@@ -59,7 +59,7 @@ class RoleApiTest extends TestCase
 
         $this->actingAs(User::factory()->create());
 
-        Role::create(['name' => 'VIEWER', 'guard_name' => 'web']);
+        Role::create(['name' => 'VIEWER', 'guard_name' => config('auth.defaults.guard', 'api')]);
 
         $this->getJson('/api/v1/roles')
             ->assertStatus(403);
