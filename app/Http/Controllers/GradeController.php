@@ -38,8 +38,33 @@ class GradeController extends Controller
 
     public function update(UpdateGradeRequest $request, int|string $grade): JsonResponse
     {
+        $gradeModel = $this->repository->find($grade);
+
+        // Store old values for audit log
+        $oldValues = $gradeModel->only([
+            'course_enrollment_id', 'student_id', 'course_id',
+            'type', 'score', 'max_score', 'weight'
+        ]);
+
+        // Update the grade
         $item = $this->repository->update($grade, $request->validated());
-        return response()->json(new GradeResource($item));
+
+        // Log the audit trail
+        $changes = [];
+        foreach ($request->validated() as $key => $newValue) {
+            if (isset($oldValues[$key]) && $oldValues[$key] != $newValue) {
+                $changes[$key] = [
+                    'old' => $oldValues[$key],
+                    'new' => $newValue
+                ];
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => new GradeResource($item),
+            'message' => 'Grade updated successfully'
+        ]);
     }
 
     public function destroy(int|string $grade): JsonResponse

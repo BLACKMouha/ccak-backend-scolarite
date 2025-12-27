@@ -33,12 +33,11 @@ Route::middleware('auth:api')->group(function () {
     Route::post('roles', [RoleController::class, 'store']);
     Route::put('roles/{role}', [RoleController::class, 'update']);
     Route::put('users/{user}/roles', [UserRoleController::class, 'update']);
+
+    // Grade management endpoints
+    Route::apiResource('grades', \App\Http\Controllers\GradeController::class);
+    Route::post('grades/{grade}/submit', [\App\Http\Controllers\GradeController::class, 'submit']);
+    Route::post('grades/{grade}/validate', [\App\Http\Controllers\GradeController::class, 'validateGrade']);
+    Route::post('grades/publish', [\App\Http\Controllers\GradeController::class, 'publish']);
 });
 
-// Route::apiResource('academic-years', \App\Http\Controllers\AcademicYearController::class);
-Route::apiResource('grades', \App\Http\Controllers\GradeController::class);
-
-// Grade management endpoints
-Route::post('grades/{grade}/submit', [\App\Http\Controllers\GradeController::class, 'submit']);
-Route::post('grades/{grade}/validate', [\App\Http\Controllers\GradeController::class, 'validateGrade']);
-Route::post('grades/publish', [\App\Http\Controllers\GradeController::class, 'publish']);
