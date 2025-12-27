@@ -34,3 +34,6 @@ Route::middleware('auth:api')->group(function () {
     Route::put('roles/{role}', [RoleController::class, 'update']);
     Route::put('users/{user}/roles', [UserRoleController::class, 'update']);
 });
+
+// Route::apiResource('academic-years', \App\Http\Controllers\AcademicYearController::class);
+Route::apiResource('grades', \App\Http\Controllers\GradeController::class);
