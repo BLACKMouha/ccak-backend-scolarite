@@ -5,6 +5,7 @@ Backend API for the CCAK scolarité platform, built with Laravel 12, PostgreSQL,
 ## Stack
 - PHP 8.2, Laravel 12
 - PostgreSQL 16, Redis 7
+- UUIDv7 primary keys for all models
 - Sanctum (API auth), Spatie Permission (roles/permissions)
 - DomPDF (PDF export), Laravel Excel (imports/exports)
 
