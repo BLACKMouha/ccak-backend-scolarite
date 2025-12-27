@@ -26,8 +26,11 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('faculties', \App\Http\Controllers\Academic\FacultyController::class);
     Route::apiResource('departments', \App\Http\Controllers\Academic\DepartmentController::class);
     Route::apiResource('academic-programs', \App\Http\Controllers\Academic\AcademicProgramController::class);
+    Route::apiResource('academic-years', \App\Http\Controllers\Academic\AcademicYearController::class);
     Route::apiResource('course-units', \App\Http\Controllers\Academic\CourseUnitController::class);
     Route::apiResource('courses', \App\Http\Controllers\Academic\CourseController::class);
+
+    Route::apiResource('deliberation-results', \App\Http\Controllers\Deliberation\DeliberationResultController::class);
 
     Route::get('roles', [RoleController::class, 'index']);
     Route::post('roles', [RoleController::class, 'store']);
