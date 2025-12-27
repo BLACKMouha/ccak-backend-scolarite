@@ -29,6 +29,12 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('course-units', \App\Http\Controllers\Academic\CourseUnitController::class);
     Route::apiResource('courses', \App\Http\Controllers\Academic\CourseController::class);
 
+    Route::apiResource('students', \App\Http\Controllers\Student\StudentController::class);
+    Route::put('students/{id}/status', [\App\Http\Controllers\Student\StudentController::class, 'updateStatus']);
+    Route::apiResource('students.guardians', \App\Http\Controllers\Student\GuardianController::class);
+    Route::apiResource('students.documents', \App\Http\Controllers\Student\DocumentController::class);
+    Route::put('documents/{id}/review', [\App\Http\Controllers\Student\DocumentController::class, 'review']);
+
     Route::get('roles', [RoleController::class, 'index']);
     Route::post('roles', [RoleController::class, 'store']);
     Route::put('roles/{role}', [RoleController::class, 'update']);
