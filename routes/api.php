@@ -37,3 +37,8 @@ Route::middleware('auth:api')->group(function () {
 
 // Route::apiResource('academic-years', \App\Http\Controllers\AcademicYearController::class);
 Route::apiResource('grades', \App\Http\Controllers\GradeController::class);
+
+// Grade management endpoints
+Route::post('grades/{grade}/submit', [\App\Http\Controllers\GradeController::class, 'submit']);
+Route::post('grades/{grade}/validate', [\App\Http\Controllers\GradeController::class, 'validateGrade']);
+Route::post('grades/publish', [\App\Http\Controllers\GradeController::class, 'publish']);

@@ -42,4 +42,29 @@ class GradeRepository
         $item = $this->find($id);
         $item->delete();
     }
+
+    /**
+     * Get all grades by status
+     *
+     * @param string $status
+     * @return Collection<int, Grade>
+     */
+    public function getByStatus(string $status): Collection
+    {
+        return Grade::query()->where('status', $status)->get();
+    }
+
+    /**
+     * Bulk publish grades by IDs
+     *
+     * @param array<int|string> $ids
+     * @return int Number of grades updated
+     */
+    public function bulkPublish(array $ids): int
+    {
+        return Grade::query()
+            ->whereIn('id', $ids)
+            ->where('status', 'VALIDATED')
+            ->update(['status' => 'PUBLISHED']);
+    }
 }
