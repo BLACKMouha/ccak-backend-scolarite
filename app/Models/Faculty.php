@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Faculty extends Model
 {
     use HasFactory;
-    use AuditableWithUuidV7;
 
     protected $fillable = [
         'name',

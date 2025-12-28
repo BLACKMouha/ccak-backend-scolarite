@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Course extends Model
 {
     use HasFactory;
-    use AuditableWithUuidV7;
 
     protected $fillable = [
         'course_unit_id',

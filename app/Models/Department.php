@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Department extends Model
 {
     use HasFactory;
-    use AuditableWithUuidV7;
     use SoftDeletes;
 
     protected $fillable = [
