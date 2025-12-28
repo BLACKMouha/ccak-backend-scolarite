@@ -11,14 +11,20 @@ use App\Http\Resources\CourseEnrollmentCollection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class CourseEnrollmentController extends Controller
+class CourseEnrollmentController extends BaseApiController
 {
-    public function __construct(private readonly CourseEnrollmentRepository $repository) {}
+    public function __construct(private readonly CourseEnrollmentRepository $repository) {
+        $this->middleware('permission:academic_programs.view')->only(['index', 'show']);
+        $this->middleware('permission:academic_programs.create')->only('store');
+        $this->middleware('permission:academic_programs.update')->only('update');
+        $this->middleware('permission:academic_programs.delete')->only('destroy');
+    }
 
     public function index(Request $request): JsonResponse
     {
         $perPage = (int) ($request->integer('per_page') ?: 15);
-        return response()->json(new CourseEnrollmentCollection($this->repository->paginate($perPage)));
+        return $this->success($this->repository->paginate($perPage), 'Course enrollments retrieved successfully', 200);
+        // return $response;
     }
 
     public function store(StoreCourseEnrollmentRequest $request): JsonResponse

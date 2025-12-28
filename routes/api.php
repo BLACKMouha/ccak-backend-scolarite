@@ -29,6 +29,7 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('course-units', \App\Http\Controllers\Academic\CourseUnitController::class);
     Route::apiResource('courses', \App\Http\Controllers\Academic\CourseController::class);
     Route::get('courses/{course}/grades', [\App\Http\Controllers\Academic\CourseController::class, 'grades']);
+    Route::apiResource('course-enrollments', \App\Http\Controllers\CourseEnrollmentController::class);
 
     Route::get('roles', [RoleController::class, 'index']);
     Route::post('roles', [RoleController::class, 'store']);
