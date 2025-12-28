@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Concerns\UsesUuidV7;
+use App\Models\Enums\GradeStatus;
+use App\Models\Enums\GradeType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -20,12 +22,12 @@ class Grade extends Model
         'course_enrollment_id' => 'string',
         'student_id' => 'string',
         'course_id' => 'string',
-        'type' => 'string',
+        'type' => GradeType::class,
         'score' => 'float',
         'max_score' => 'float',
         'weight' => 'float',
         'entered_by' => 'string',
-        'status' => 'string',
+        'status' => GradeStatus::class,
         'entered_at' => 'datetime',
         'validated_at' => 'datetime',
     ];
