@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Deliberation;
+namespace App\Http\Controllers\Academic;
 
 use App\Http\Controllers\BaseApiController;
-use App\Http\Requests\Deliberation\StoreDeliberationResultRequest;
-use App\Http\Requests\Deliberation\UpdateDeliberationResultRequest;
+use App\Http\Requests\Academic\StoreDeliberationResultRequest;
+use App\Http\Requests\Academic\UpdateDeliberationResultRequest;
+use App\Http\Resources\Academic\DeliberationResultResource;
 use App\Models\DeliberationResult;
 use Illuminate\Http\Response;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -23,8 +24,8 @@ class DeliberationResultController extends BaseApiController
     public function index()
     {
         $results = QueryBuilder::for(DeliberationResult::query())
-            ->with(['deliberationSession', 'student'])
-            ->allowedIncludes(['deliberationSession', 'student'])
+            ->with(['deliberationSession'])
+            ->allowedIncludes(['deliberationSession'])
             ->allowedFilters([
                 AllowedFilter::exact('deliberation_session_id'),
                 AllowedFilter::exact('student_id'),
@@ -42,26 +43,35 @@ class DeliberationResultController extends BaseApiController
             ->defaultSort('-created_at')
             ->get();
 
-        return $this->success($results);
+        return $this->success(DeliberationResultResource::collection($results));
     }
 
     public function store(StoreDeliberationResultRequest $request)
     {
         $result = DeliberationResult::create($request->validated());
 
-        return $this->success($result->load(['deliberationSession', 'student']), 'Deliberation result created', Response::HTTP_CREATED);
+        return $this->success(
+            new DeliberationResultResource($result->load(['deliberationSession'])),
+            'Deliberation result created',
+            Response::HTTP_CREATED
+        );
     }
 
     public function show(DeliberationResult $deliberationResult)
     {
-        return $this->success($deliberationResult->load(['deliberationSession', 'student']));
+        return $this->success(
+            new DeliberationResultResource($deliberationResult->load(['deliberationSession']))
+        );
     }
 
     public function update(UpdateDeliberationResultRequest $request, DeliberationResult $deliberationResult)
     {
         $deliberationResult->update($request->validated());
 
-        return $this->success($deliberationResult->refresh()->load(['deliberationSession', 'student']), 'Deliberation result updated');
+        return $this->success(
+            new DeliberationResultResource($deliberationResult->refresh()->load(['deliberationSession'])),
+            'Deliberation result updated'
+        );
     }
 
     public function destroy(DeliberationResult $deliberationResult)

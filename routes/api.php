@@ -30,7 +30,9 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('course-units', \App\Http\Controllers\Academic\CourseUnitController::class);
     Route::apiResource('courses', \App\Http\Controllers\Academic\CourseController::class);
 
-    Route::apiResource('deliberation-results', \App\Http\Controllers\Deliberation\DeliberationResultController::class);
+    Route::apiResource('deliberation-sessions', \App\Http\Controllers\Academic\DeliberationSessionController::class);
+    Route::apiResource('deliberation-results', \App\Http\Controllers\Academic\DeliberationResultController::class);
+
 
     Route::get('roles', [RoleController::class, 'index']);
     Route::post('roles', [RoleController::class, 'store']);

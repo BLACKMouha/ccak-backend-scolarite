@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Deliberation;
+namespace App\Http\Requests\Academic;
 
 use App\Models\DeliberationResult;
 use Illuminate\Foundation\Http\FormRequest;

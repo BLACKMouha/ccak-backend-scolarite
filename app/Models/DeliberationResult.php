@@ -27,4 +27,14 @@ class DeliberationResult extends Model
     protected $casts = [
         'is_with_honors' => 'boolean',
     ];
+
+    public function student(): BelongsTo
+    {
+        return $this->belongsTo(Student::class);
+    }
+
+    public function deliberationSession()
+    {
+        return $this->belongsTo(DeliberationSession::class, 'deliberation_session_id');
+    }
 }
