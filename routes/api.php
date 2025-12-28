@@ -39,5 +39,9 @@ Route::middleware('auth:api')->group(function () {
     Route::post('grades/{grade}/submit', [\App\Http\Controllers\GradeController::class, 'submit']);
     Route::post('grades/{grade}/validate', [\App\Http\Controllers\GradeController::class, 'validateGrade']);
     Route::post('grades/publish', [\App\Http\Controllers\GradeController::class, 'publish']);
+
+    // Student management endpoints
+    Route::apiResource('students', \App\Http\Controllers\StudentController::class);
+    Route::get('students/{student}/grades', [\App\Http\Controllers\StudentController::class, 'grades']);
 });
 

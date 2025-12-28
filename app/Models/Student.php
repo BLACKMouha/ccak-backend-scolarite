@@ -20,4 +20,14 @@ class Student extends Model
         'student_number' => 'string',
         'full_name' => 'string',
     ];
+
+    public function grades()
+    {
+        return $this->hasMany(\App\Models\Grade::class, 'student_id');
+    }
+
+    public function courseEnrollments()
+    {
+        return $this->hasMany(\App\Models\CourseEnrollment::class, 'student_id');
+    }
 }
