@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Course extends Model
 {
     use HasFactory;
-    use AuditableWithUuidV7;
 
     protected $fillable = [
         'course_unit_id',
@@ -79,5 +79,21 @@ class Course extends Model
         }
 
         return $data;
+    }
+
+    // HasMany course enrollments
+    public function courseEnrollments(): HasMany
+    {
+        return $this->hasMany(CourseEnrollment::class);
+    }
+
+    // Get current enrollment count
+    public function getCurrentEnrollmentCount($academicYearId, $semester): int
+    {
+        return $this->courseEnrollments()
+            ->where('academic_year_id', $academicYearId)
+            ->where('semester', $semester)
+            ->where('status', CourseEnrollment::STATUS_ENROLLED)
+            ->count();
     }
 }

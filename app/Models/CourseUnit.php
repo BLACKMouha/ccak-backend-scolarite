@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class CourseUnit extends Model
 {
     use HasFactory;
-    use AuditableWithUuidV7;
 
     public const TYPES = ['OBLIGATOIRE', 'OPTIONNEL'];
 

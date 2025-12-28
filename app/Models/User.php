@@ -9,13 +9,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Ramsey\Uuid\Uuid;
 use Spatie\Permission\Traits\HasRoles;
-use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
-use OwenIt\Auditing\Auditable as AuditableTrait;
 
-class User extends Authenticatable implements AuditableContract
+class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasUuids, HasRoles, AuditableTrait;
+    use HasFactory, Notifiable, HasUuids, HasRoles;
 
     public $incrementing = false;
     protected $keyType = 'string';
