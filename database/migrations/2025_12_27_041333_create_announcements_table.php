@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('announcements', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('creator_id')->constrained('users')->onDelete('cascade');
+            $table->uuid('id')->primary();
+            $table->foreignUuid('creator_id')->constrained('users')->onDelete('cascade');
             $table->string('title');
             $table->text('content');
             $table->enum('priority', ['low', 'medium', 'high', 'critical'])->default('medium');

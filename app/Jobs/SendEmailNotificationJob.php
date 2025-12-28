@@ -2,26 +2,36 @@
 
 namespace App\Jobs;
 
+use App\Models\Notification;
+use App\Services\Notification\EmailService;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 
 class SendEmailNotificationJob implements ShouldQueue
 {
-    use Queueable;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * Create a new job instance.
-     */
-    public function __construct()
-    {
-        //
-    }
+    public function __construct(
+        public Notification $notification
+    ) {}
 
-    /**
-     * Execute the job.
-     */
-    public function handle(): void
+    public function handle(EmailService $emailService): void
     {
-        //
+        $user = $this->notification->user;
+
+        if (!$user->email) {
+            return;
+        }
+
+        $emailService->send(
+            recipients: $user->email,
+            subject: $this->notification->title,
+            message: $this->notification->message,
+            template: 'notification',
+            templateData: $this->notification->metadata ?? []
+        );
     }
 }

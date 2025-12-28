@@ -14,7 +14,7 @@ class NotificationService
      * Send notification to user(s)
      */
     public function send(
-        array|int $userIds,
+        array|string $userIds,
         string $title,
         string $message,
         string $type,
@@ -49,7 +49,7 @@ class NotificationService
      * Create notification record
      */
     protected function createNotification(
-        int $userId,
+        string $userId,
         string $title,
         string $message,
         string $type,
@@ -180,7 +180,7 @@ class NotificationService
     /**
      * Mark all notifications as read for user
      */
-    public function markAllAsRead(int $userId): int
+    public function markAllAsRead(string $userId): int
     {
         return Notification::where('user_id', $userId)
             ->where('is_read', false)
@@ -193,7 +193,7 @@ class NotificationService
     /**
      * Get unread count for user
      */
-    public function getUnreadCount(int $userId): int
+    public function getUnreadCount(string $userId): int
     {
         return Notification::where('user_id', $userId)
             ->unread()
