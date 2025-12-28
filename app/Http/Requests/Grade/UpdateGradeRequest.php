@@ -31,7 +31,7 @@ class UpdateGradeRequest extends FormRequest
             'type' => 'sometimes|string|in:CC,EXAM,TP,ORAL',
             'score' => 'sometimes|numeric|min:0',
             'max_score' => 'sometimes|numeric|min:0|gt:0',
-            'weight' => 'sometimes|numeric|min:0|max:1',
+            'weight' => 'sometimes|numeric|min:0',
         ];
     }
 
@@ -47,7 +47,7 @@ class UpdateGradeRequest extends FormRequest
             if (isset($data['score'], $data['max_score']) && $data['score'] > $data['max_score']) {
                 $validator->errors()->add(
                     'score',
-                    "The score cannot exceed the maximum score of {$data['max_score']}."
+                    "La note ne peut pas dépasser le score maximum de {$data['max_score']}."
                 );
             }
 
@@ -59,7 +59,7 @@ class UpdateGradeRequest extends FormRequest
                 if ($data['score'] > $grade->max_score) {
                     $validator->errors()->add(
                         'score',
-                        "The score cannot exceed the maximum score of {$grade->max_score}."
+                        "La note ne peut pas dépasser le score maximum de {$grade->max_score}."
                     );
                 }
             }
@@ -69,7 +69,7 @@ class UpdateGradeRequest extends FormRequest
                 if ($grade->score > $data['max_score']) {
                     $validator->errors()->add(
                         'max_score',
-                        "The maximum score cannot be less than the current score of {$grade->score}."
+                        "Le score maximum ne peut pas être inférieur à la note actuelle de {$grade->score}."
                     );
                 }
             }
@@ -88,7 +88,7 @@ class UpdateGradeRequest extends FormRequest
                 if (!$enrollment) {
                     $validator->errors()->add(
                         'course_enrollment_id',
-                        'The course enrollment does not match the provided student and course.'
+                        'L\'inscription au cours ne correspond pas à l\'étudiant et au cours fournis.'
                     );
                 }
             }
@@ -103,7 +103,7 @@ class UpdateGradeRequest extends FormRequest
                 if ($existingGrade) {
                     $validator->errors()->add(
                         'type',
-                        "A grade of type {$data['type']} already exists for this course enrollment."
+                        "Une note de type {$data['type']} existe déjà pour cette inscription au cours."
                     );
                 }
             }
@@ -116,11 +116,10 @@ class UpdateGradeRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'type.in' => 'The grade type must be one of: CC (Continuous Assessment), EXAM, TP (Practical Work), or ORAL.',
-            'score.min' => 'The score must be at least 0.',
-            'max_score.gt' => 'The maximum score must be greater than 0.',
-            'weight.min' => 'The weight must be at least 0.',
-            'weight.max' => 'The weight cannot exceed 1 (100%).',
+            'type.in' => 'Le type de note doit être l\'un des suivants : CC (Contrôle Continu), EXAM, TP (Travaux Pratiques), ou ORAL.',
+            'score.min' => 'La note doit être au minimum 0.',
+            'max_score.gt' => 'Le score maximum doit être supérieur à 0.',
+            'weight.min' => 'Le poids doit être au minimum 0.'
         ];
     }
 
@@ -132,13 +131,13 @@ class UpdateGradeRequest extends FormRequest
         $grade = \App\Models\Grade::find($this->route('grade'));
 
         if ($grade && $grade->status !== 'DRAFT') {
-            abort(403, 'Grades can only be updated when in DRAFT status.');
+            abort(403, 'Les notes ne peuvent être modifiées que lorsqu\'elles sont en statut BROUILLON.');
         }
 
         if ($grade && $grade->entered_by !== auth()->id) {
-            abort(403, 'Only the original creator can update this grade.');
+            abort(403, 'Seul le créateur original peut modifier cette note.');
         }
 
-        abort(403, 'You are not authorized to update grades.');
+        abort(403, 'Vous n\'êtes pas autorisé à modifier les notes.');
     }
 }

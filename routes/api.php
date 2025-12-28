@@ -28,6 +28,7 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('academic-programs', \App\Http\Controllers\Academic\AcademicProgramController::class);
     Route::apiResource('course-units', \App\Http\Controllers\Academic\CourseUnitController::class);
     Route::apiResource('courses', \App\Http\Controllers\Academic\CourseController::class);
+    Route::get('courses/{course}/grades', [\App\Http\Controllers\Academic\CourseController::class, 'grades']);
 
     Route::get('roles', [RoleController::class, 'index']);
     Route::post('roles', [RoleController::class, 'store']);
@@ -43,5 +44,11 @@ Route::middleware('auth:api')->group(function () {
     // Student management endpoints
     Route::apiResource('students', \App\Http\Controllers\StudentController::class);
     Route::get('students/{student}/grades', [\App\Http\Controllers\StudentController::class, 'grades']);
+
+    // Semester results management endpoints
+    Route::apiResource('semester-results', \App\Http\Controllers\SemesterResultController::class);
+    Route::post('semester-results/calculate', [\App\Http\Controllers\SemesterResultController::class, 'calculate']);
+    Route::get('semester-results/statistics', [\App\Http\Controllers\SemesterResultController::class, 'statistics']);
+    Route::post('semester-results/recalculate/{student}', [\App\Http\Controllers\SemesterResultController::class, 'recalculateStudent']);
 });
 
