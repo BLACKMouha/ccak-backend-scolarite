@@ -13,8 +13,8 @@ class StudentFactory extends Factory
     public function definition(): array
     {
         return [
-            'student_number' => $this->faker->sentence(),
-            'full_name' => $this->faker->sentence(),
+            'student_number' => $this->faker->unique()->numerify('STU#######'),
+            'full_name' => $this->faker->name(),
         ];
     }
 }
