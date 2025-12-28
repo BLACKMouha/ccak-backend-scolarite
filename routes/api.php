@@ -1,5 +1,12 @@
 <?php
 
+use App\Http\Controllers\Academic\AcademicProgramController;
+use App\Http\Controllers\Academic\CourseController;
+use App\Http\Controllers\Academic\CourseUnitController;
+use App\Http\Controllers\Academic\DepartmentController;
+use App\Http\Controllers\Academic\FacultyController;
+use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\GeneratedDocumentController;
 use App\Http\Controllers\Academic\AcademicYearController;
 use App\Http\Controllers\Academic\CourseEnrollmentController;
 use App\Http\Controllers\Academic\EnrollmentController;
@@ -27,14 +34,42 @@ Route::middleware('auth:api')->group(function () {
         ]);
     });
 
-    Route::apiResource('faculties', \App\Http\Controllers\Academic\FacultyController::class);
-    Route::apiResource('departments', \App\Http\Controllers\Academic\DepartmentController::class);
-    Route::apiResource('academic-programs', \App\Http\Controllers\Academic\AcademicProgramController::class);
-    Route::apiResource('course-units', \App\Http\Controllers\Academic\CourseUnitController::class);
-    Route::apiResource('courses', \App\Http\Controllers\Academic\CourseController::class);
-    Route::apiResource('academic-years', \App\Http\Controllers\Academic\AcademicYearController::class);
-    Route::apiResource('enrollments', \App\Http\Controllers\Academic\EnrollmentController::class);
-    Route::apiResource('course-enrollments', \App\Http\Controllers\Academic\CourseEnrollmentController::class);
+    Route::apiResource('faculties', FacultyController::class);
+    Route::apiResource('departments', DepartmentController::class);
+    Route::apiResource('academic-programs', AcademicProgramController::class);
+    Route::apiResource('course-units', CourseUnitController::class);
+    Route::apiResource('courses', CourseController::class);
+    Route::apiResource('generated-documents', GeneratedDocumentController::class);
+    Route::get('/generated-documents/verify/{documentNumber}', [GeneratedDocumentController::class, 'verify']);
+    Route::apiResource('documents', DocumentController::class);
+    Route::prefix('documents')->group(function () {
+        // Routes pour les rapports et statistiques
+        Route::get('/report', [DocumentController::class, 'report']);
+        Route::get('/check-status', [DocumentController::class, 'checkStatus']);
+        Route::get('/check-status/{studentId}', [DocumentController::class, 'checkStatus']);
+
+        // Routes pour les documents en attente
+        Route::get('/pending', [DocumentController::class, 'pending']);
+
+        // Routes pour les documents d'un étudiant spécifique
+        Route::get('/student/{studentId}', [DocumentController::class, 'studentDocuments'])
+            ->name('documents.student');
+
+        // Routes spécifiques à un document (complémentaires aux routes apiResource)
+        Route::prefix('{document}')->group(function () {
+            // Téléchargement
+            Route::get('/download', [DocumentController::class, 'download'])
+                ->name('documents.download');
+            Route::get('/download-file', [DocumentController::class, 'downloadFile'])
+                ->name('documents.download.file');
+
+            // Review (approbation/rejet)
+            Route::post('/approve', [DocumentController::class, 'approve'])
+                ->name('documents.approve');
+            Route::post('/reject', [DocumentController::class, 'reject'])
+                ->name('documents.reject');
+        });
+    });
 
     Route::get('roles', [RoleController::class, 'index']);
     Route::post('roles', [RoleController::class, 'store']);
