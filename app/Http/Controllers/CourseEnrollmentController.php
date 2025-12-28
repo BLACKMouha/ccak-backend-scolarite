@@ -14,10 +14,10 @@ use Illuminate\Http\Request;
 class CourseEnrollmentController extends BaseApiController
 {
     public function __construct(private readonly CourseEnrollmentRepository $repository) {
-        $this->middleware('permission:academic_programs.view')->only(['index', 'show']);
-        $this->middleware('permission:academic_programs.create')->only('store');
-        $this->middleware('permission:academic_programs.update')->only('update');
-        $this->middleware('permission:academic_programs.delete')->only('destroy');
+        // $this->middleware('permission:course_enrollments.view')->only(['index', 'show']);
+        // $this->middleware('permission:course_enrollments.create')->only('store');
+        // $this->middleware('permission:course_enrollments.update')->only('update');
+        // $this->middleware('permission:course_enrollments.delete')->only('destroy');
     }
 
     public function index(Request $request): JsonResponse

@@ -11,14 +11,22 @@ use App\Http\Resources\GradeCollection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class GradeController extends Controller
+class GradeController extends BaseApiController
 {
-    public function __construct(private readonly GradeRepository $repository) {}
+    public function __construct(private readonly GradeRepository $repository) {
+        // $this->middleware('permission:grades.view')->only(['index', 'show']);
+        // $this->middleware('permission:grades.create')->only('store');
+        // $this->middleware('permission:grades.update')->only('update');
+        // $this->middleware('permission:grades.delete')->only('destroy');
+        // $this->middleware('permission:grades.submit')->only('submit');
+        // $this->middleware('permission:grades.validate')->only('validateGrade');
+        // $this->middleware('permission:grades.publish')->only('publish');
+    }
 
     public function index(Request $request): JsonResponse
     {
         $perPage = (int) ($request->integer('per_page') ?: 15);
-        return response()->json(new GradeCollection($this->repository->paginate($perPage)));
+        return $this->success($this->repository->paginate($perPage), 'Grades retrieved successfully');
     }
 
     public function store(StoreGradeRequest $request): JsonResponse
@@ -28,12 +36,12 @@ class GradeController extends Controller
             'entered_by' => auth()->id,
             'status' => "DRAFT",
         ]);
-        return response()->json(new GradeResource($item), 201);
+        return $this->success(new GradeResource($item), 'Grade created successfully', 201);
     }
 
     public function show(int|string $grade): JsonResponse
     {
-        return response()->json(new GradeResource($this->repository->find($grade)));
+        return $this->success(new GradeResource($this->repository->find($grade)), 'Grade retrieved successfully');
     }
 
     public function update(UpdateGradeRequest $request, int|string $grade): JsonResponse
@@ -60,17 +68,13 @@ class GradeController extends Controller
             }
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => new GradeResource($item),
-            'message' => 'Grade updated successfully'
-        ]);
+        return $this->success(new GradeResource($item), 'Grade updated successfully');
     }
 
     public function destroy(int|string $grade): JsonResponse
     {
         $this->repository->delete($grade);
-        return response()->json(null, 204);
+        return $this->success(null, 'Grade deleted successfully', 204);
     }
 
     /**
@@ -84,20 +88,12 @@ class GradeController extends Controller
 
         // Validation: Cannot submit if already submitted or beyond
         if (in_array($item->status, ['SUBMITTED', 'VALIDATED', 'PUBLISHED'])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Grade has already been submitted and cannot be modified',
-                'errors' => ['status' => ['Invalid status transition']]
-            ], 422);
+            return $this->error('Grade has already been submitted and cannot be modified', 422, ['status' => ['Invalid status transition']]);
         }
 
         // Validation: Check required fields
         if (is_null($item->score) || is_null($item->max_score)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Grade must have a score and max_score before submission',
-                'errors' => ['score' => ['Score and max_score are required']]
-            ], 422);
+            return $this->error('Grade must have a score and max_score before submission', 422, ['score' => ['Score and max_score are required']]);
         }
 
         // Update status to SUBMITTED
@@ -109,11 +105,7 @@ class GradeController extends Controller
         // TODO: Notify admin (implement notification system)
         // event(new GradeSubmitted($item));
 
-        return response()->json([
-            'success' => true,
-            'data' => new GradeResource($item),
-            'message' => 'Grade submitted successfully for validation'
-        ]);
+        return $this->success(new GradeResource($item), 'Grade submitted successfully for validation');
     }
 
     /**
@@ -130,11 +122,7 @@ class GradeController extends Controller
 
         // Validation: Can only validate SUBMITTED grades
         if ($item->status !== 'SUBMITTED') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Only submitted grades can be validated',
-                'errors' => ['status' => ['Grade must be in SUBMITTED status']]
-            ], 422);
+            return $this->error('Only submitted grades can be validated', 422, ['status' => ['Grade must be in SUBMITTED status']]);
         }
 
         // Update status to VALIDATED
@@ -149,11 +137,7 @@ class GradeController extends Controller
         // TODO: Add to audit log
         // AuditLog::create([...]);
 
-        return response()->json([
-            'success' => true,
-            'data' => new GradeResource($item),
-            'message' => 'Grade validated successfully'
-        ]);
+        return $this->success(new GradeResource($item), 'Grade validated successfully');
     }
 
     /**
@@ -169,11 +153,7 @@ class GradeController extends Controller
         $validatedGrades = $this->repository->getByStatus('VALIDATED');
 
         if ($validatedGrades->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No validated grades found to publish',
-                'data' => ['count' => 0]
-            ], 404);
+            return $this->error('No validated grades found to publish', 404, ['count' => 0]);
         }
 
         // Bulk update to PUBLISHED status
@@ -182,13 +162,9 @@ class GradeController extends Controller
         // TODO: Notify students
         // event(new GradesPublished($validatedGrades));
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'count' => $publishedCount,
-                'message' => "Successfully published {$publishedCount} grade(s)"
-            ],
-            'message' => 'Grades published successfully'
-        ]);
+        return $this->success([
+            'count' => $publishedCount,
+            'message' => "Successfully published {$publishedCount} grade(s)"
+        ], 'Grades published successfully');
     }
 }

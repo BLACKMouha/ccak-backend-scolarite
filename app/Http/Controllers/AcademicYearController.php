@@ -11,36 +11,41 @@ use App\Http\Resources\AcademicYearCollection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class AcademicYearController extends Controller
+class AcademicYearController extends BaseApiController
 {
-    public function __construct(private readonly AcademicYearRepository $repository) {}
+    public function __construct(private readonly AcademicYearRepository $repository) {
+        // $this->middleware('permission:academic_programs.view')->only(['index', 'show']);
+        // $this->middleware('permission:academic_programs.create')->only('store');
+        // $this->middleware('permission:academic_programs.update')->only('update');
+        // $this->middleware('permission:academic_programs.delete')->only('destroy');
+    }
 
     public function index(Request $request): JsonResponse
     {
         $perPage = (int) ($request->integer('per_page') ?: 15);
-        return response()->json(new AcademicYearCollection($this->repository->paginate($perPage)));
+        return $this->success($this->repository->paginate($perPage), 'Academic years retrieved successfully');
     }
 
     public function store(StoreAcademicYearRequest $request): JsonResponse
     {
         $item = $this->repository->create($request->validated());
-        return response()->json(new AcademicYearResource($item), 201);
+        return $this->success(new AcademicYearResource($item), 'Academic year created successfully', 201);
     }
 
     public function show(int|string $academicYear): JsonResponse
     {
-        return response()->json(new AcademicYearResource($this->repository->find($academicYear)));
+        return $this->success(new AcademicYearResource($this->repository->find($academicYear)), 'Academic year retrieved successfully');
     }
 
     public function update(UpdateAcademicYearRequest $request, int|string $academicYear): JsonResponse
     {
         $item = $this->repository->update($academicYear, $request->validated());
-        return response()->json(new AcademicYearResource($item));
+        return $this->success(new AcademicYearResource($item), 'Academic year updated successfully');
     }
 
     public function destroy(int|string $academicYear): JsonResponse
     {
         $this->repository->delete($academicYear);
-        return response()->json(null, 204);
+        return $this->success(null, 'Academic year deleted successfully', 204);
     }
 }

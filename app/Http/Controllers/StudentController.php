@@ -7,43 +7,46 @@ use App\Repositories\StudentRepository;
 use App\Http\Requests\Student\StoreStudentRequest;
 use App\Http\Requests\Student\UpdateStudentRequest;
 use App\Http\Resources\StudentResource;
-use App\Http\Resources\StudentCollection;
-use App\Http\Resources\GradeCollection;
 use App\Models\Enums\GradeStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class StudentController extends Controller
+class StudentController extends BaseApiController
 {
-    public function __construct(private readonly StudentRepository $repository) {}
+    public function __construct(private readonly StudentRepository $repository) {
+        // $this->middleware('permission:students.view')->only(['index', 'show', 'grades']);
+        // $this->middleware('permission:students.create')->only('store');
+        // $this->middleware('permission:students.update')->only('update');
+        // $this->middleware('permission:students.delete')->only('destroy');
+    }
 
     public function index(Request $request): JsonResponse
     {
         $perPage = (int) ($request->integer('per_page') ?: 15);
-        return response()->json(new StudentCollection($this->repository->paginate($perPage)));
+        return $this->success($this->repository->paginate($perPage), 'Students retrieved successfully');
     }
 
     public function store(StoreStudentRequest $request): JsonResponse
     {
         $item = $this->repository->create($request->validated());
-        return response()->json(new StudentResource($item), 201);
+        return $this->success(new StudentResource($item), 'Student created successfully', 201);
     }
 
     public function show(int|string $student): JsonResponse
     {
-        return response()->json(new StudentResource($this->repository->find($student)));
+        return $this->success(new StudentResource($this->repository->find($student)), 'Student retrieved successfully');
     }
 
     public function update(UpdateStudentRequest $request, int|string $student): JsonResponse
     {
         $item = $this->repository->update($student, $request->validated());
-        return response()->json(new StudentResource($item));
+        return $this->success(new StudentResource($item), 'Student updated successfully');
     }
 
     public function destroy(int|string $student): JsonResponse
     {
         $this->repository->delete($student);
-        return response()->json(null, 204);
+        return $this->success(null, 'Student deleted successfully', 204);
     }
 
     public function grades(Request $request, int|string $student): JsonResponse
@@ -118,23 +121,19 @@ class StudentController extends Controller
             ];
         })->values();
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'student' => [
-                    'id' => $studentModel->id,
-                    'student_number' => $studentModel->student_number,
-                    'full_name' => $studentModel->full_name,
-                ],
-                'courses' => $groupedGrades,
-                'summary' => [
-                    'total_courses' => $groupedGrades->count(),
-                    'total_grades' => $grades->count(),
-                    'overall_average' => round($grades->avg('score'), 2),
-                ],
+        return $this->success([
+            'student' => [
+                'id' => $studentModel->id,
+                'student_number' => $studentModel->student_number,
+                'full_name' => $studentModel->full_name,
             ],
-            'message' => 'Student grades retrieved successfully',
-        ]);
+            'courses' => $groupedGrades,
+            'summary' => [
+                'total_courses' => $groupedGrades->count(),
+                'total_grades' => $grades->count(),
+                'overall_average' => round($grades->avg('score'), 2),
+            ],
+        ], 'Student grades retrieved successfully');
     }
 
     private function isStudent($user): bool

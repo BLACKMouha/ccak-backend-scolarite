@@ -15,40 +15,46 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
-class SemesterResultController extends Controller
+class SemesterResultController extends BaseApiController
 {
     public function __construct(
         private readonly SemesterResultRepository $repository,
         private readonly SemesterResultCalculationService $calculationService
-    ) {}
+    ) {
+        // $this->middleware('permission:semester_results.view')->only(['index', 'show', 'statistics']);
+        // $this->middleware('permission:semester_results.create')->only('store');
+        // $this->middleware('permission:semester_results.update')->only('update');
+        // $this->middleware('permission:semester_results.delete')->only('destroy');
+        // $this->middleware('permission:semester_results.calculate')->only(['calculate', 'recalculateStudent']);
+    }
 
     public function index(Request $request): JsonResponse
     {
         $perPage = (int) ($request->integer('per_page') ?: 15);
-        return response()->json(new SemesterResultCollection($this->repository->paginate($perPage)));
+        return $this->success($this->repository->paginate($perPage), 'Semester results retrieved successfully');
     }
 
     public function store(StoreSemesterResultRequest $request): JsonResponse
     {
         $item = $this->repository->create($request->validated());
-        return response()->json(new SemesterResultResource($item), 201);
+        return $this->success(new SemesterResultResource($item), 'Semester result created successfully', 201);
     }
 
     public function show(int|string $semesterResult): JsonResponse
     {
-        return response()->json(new SemesterResultResource($this->repository->find($semesterResult)));
+        return $this->success(new SemesterResultResource($this->repository->find($semesterResult)), 'Semester result retrieved successfully');
     }
 
     public function update(UpdateSemesterResultRequest $request, int|string $semesterResult): JsonResponse
     {
         $item = $this->repository->update($semesterResult, $request->validated());
-        return response()->json(new SemesterResultResource($item));
+        return $this->success(new SemesterResultResource($item), 'Semester result updated successfully');
     }
 
     public function destroy(int|string $semesterResult): JsonResponse
     {
         $this->repository->delete($semesterResult);
-        return response()->json(null, 204);
+        return $this->success(null, 'Semester result deleted successfully', 204);
     }
 
     /**
@@ -61,11 +67,7 @@ class SemesterResultController extends Controller
         // Validate admin authorization
         $user = $request->user();
         if (!$user || !$user->hasRole('ADMIN')) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Only administrators are authorized to calculate semester results.',
-                'errors' => ['authorization' => ['Admin role required']]
-            ], 403);
+            return $this->error('Only administrators are authorized to calculate semester results.', 403, ['authorization' => ['Admin role required']]);
         }
 
         // Validate request data
@@ -91,16 +93,12 @@ class SemesterResultController extends Controller
                 $jobId
             )->onQueue('semester-calculations');
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Semester results calculation has been queued and will be processed asynchronously.',
-                'data' => [
-                    'job_id' => $jobId,
-                    'academic_year_id' => $academicYearId,
-                    'semester' => $semester,
-                    'status' => 'queued'
-                ]
-            ], 202);
+            return $this->success([
+                'job_id' => $jobId,
+                'academic_year_id' => $academicYearId,
+                'semester' => $semester,
+                'status' => 'queued'
+            ], 'Semester results calculation has been queued and will be processed asynchronously.', 202);
         } else {
             // Process synchronously (for small datasets or testing)
             try {
@@ -110,18 +108,14 @@ class SemesterResultController extends Controller
                     $user
                 );
 
-                return response()->json([
-                    'success' => $result['success'],
-                    'message' => $result['message'],
-                    'data' => $result['data']
-                ], $result['success'] ? 200 : 422);
+                if ($result['success']) {
+                    return $this->success($result['data'], $result['message']);
+                } else {
+                    return $this->error($result['message'], 422);
+                }
 
             } catch (\Exception $e) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to calculate semester results: ' . $e->getMessage(),
-                    'errors' => ['calculation' => [$e->getMessage()]]
-                ], 500);
+                return $this->error('Failed to calculate semester results: ' . $e->getMessage(), 500, ['calculation' => [$e->getMessage()]]);
             }
         }
     }
@@ -143,18 +137,10 @@ class SemesterResultController extends Controller
                 $validated['semester']
             );
 
-            return response()->json([
-                'success' => true,
-                'data' => $statistics,
-                'message' => 'Semester statistics retrieved successfully'
-            ]);
+            return $this->success($statistics, 'Semester statistics retrieved successfully');
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to retrieve semester statistics: ' . $e->getMessage(),
-                'errors' => ['statistics' => [$e->getMessage()]]
-            ], 500);
+            return $this->error('Failed to retrieve semester statistics: ' . $e->getMessage(), 500, ['statistics' => [$e->getMessage()]]);
         }
     }
 
@@ -167,11 +153,7 @@ class SemesterResultController extends Controller
         // Validate admin authorization
         $user = $request->user();
         if (!$user || !$user->hasRole('ADMIN')) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Only administrators are authorized to recalculate student results.',
-                'errors' => ['authorization' => ['Admin role required']]
-            ], 403);
+            return $this->error('Only administrators are authorized to recalculate student results.', 403, ['authorization' => ['Admin role required']]);
         }
 
         $validated = $request->validate([
@@ -190,25 +172,13 @@ class SemesterResultController extends Controller
             );
 
             if ($result) {
-                return response()->json([
-                    'success' => true,
-                    'data' => new SemesterResultResource($result),
-                    'message' => 'Student semester result recalculated successfully'
-                ]);
+                return $this->success(new SemesterResultResource($result), 'Student semester result recalculated successfully');
             } else {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Could not recalculate semester result for this student',
-                    'errors' => ['student' => ['No courses found or calculation failed']]
-                ], 422);
+                return $this->error('Could not recalculate semester result for this student', 422, ['student' => ['No courses found or calculation failed']]);
             }
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to recalculate student result: ' . $e->getMessage(),
-                'errors' => ['calculation' => [$e->getMessage()]]
-            ], 500);
+            return $this->error('Failed to recalculate student result: ' . $e->getMessage(), 500, ['calculation' => [$e->getMessage()]]);
         }
     }
 }
