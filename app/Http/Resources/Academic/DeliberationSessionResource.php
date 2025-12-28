@@ -21,7 +21,7 @@ class DeliberationSessionResource extends JsonResource
             'presided_by' => $this->presided_by,
             'president' => $this->whenLoaded('president'),
             'jury_members' => $this->jury_members ?? [],
-            'results_count' => $this->results_count ?? 0,
+            'results' => $this->whenLoaded('results'),
             'created_at' => optional($this->created_at)->toISOString(),
             'updated_at' => optional($this->updated_at)->toISOString(),
         ];

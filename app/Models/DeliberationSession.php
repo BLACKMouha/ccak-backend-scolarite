@@ -2,19 +2,24 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
 
 class DeliberationSession extends Model
 {
-    /** @use HasFactory<\Database\Factories\DeliberationSessionFactory> */
     use HasFactory;
 
+
+    protected $table = 'deliberation_sessions';
+
+    // Clé primaire de type UUID
     protected $keyType = 'string';
     public $incrementing = false;
 
+    // Champs remplissables
     protected $fillable = [
+        'id',
         'academic_program_id',
         'academic_year_id',
         'semester',
@@ -25,14 +30,25 @@ class DeliberationSession extends Model
         'jury_members',
     ];
 
+    // Casts pour types spécifiques
     protected $casts = [
+        'id' => 'string',
+        'academic_program_id' => 'string',
+        'academic_year_id' => 'string',
+        'semester' => 'integer',
         'session_date' => 'date',
+        'status' => 'string',
+        'presided_by' => 'string',
         'jury_members' => 'array',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
+    // Génération automatique de UUID à la création
     protected static function boot()
     {
         parent::boot();
+
         static::creating(function ($model) {
             if (empty($model->id)) {
                 $model->id = (string) Str::uuid();
@@ -40,7 +56,7 @@ class DeliberationSession extends Model
         });
     }
 
-    // Constants for status
+    // Optionnel : Enum pour le status
     const STATUS_SCHEDULED = 'SCHEDULED';
     const STATUS_IN_PROGRESS = 'IN_PROGRESS';
     const STATUS_COMPLETED = 'COMPLETED';
@@ -56,7 +72,6 @@ class DeliberationSession extends Model
         ];
     }
 
-    // Relationships
     public function academicProgram()
     {
         return $this->belongsTo(AcademicProgram::class, 'academic_program_id');
@@ -69,7 +84,7 @@ class DeliberationSession extends Model
 
     public function president()
     {
-        return $this->belongsTo(User::class, 'presided_by');
+        return $this->belongsTo(Faculty::class, 'presided_by');
     }
 
     public function results()

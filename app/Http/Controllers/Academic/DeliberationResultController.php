@@ -2,82 +2,58 @@
 
 namespace App\Http\Controllers\Academic;
 
-use App\Http\Controllers\BaseApiController;
-use App\Http\Requests\Academic\StoreDeliberationResultRequest;
-use App\Http\Requests\Academic\UpdateDeliberationResultRequest;
-use App\Http\Resources\Academic\DeliberationResultResource;
-use App\Models\DeliberationResult;
-use Illuminate\Http\Response;
-use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\QueryBuilder;
+use Illuminate\Http\Request;
+use App\Services\DeliberationResultService;
+use App\Http\Controllers\Controller;
 
-class DeliberationResultController extends BaseApiController
+class DeliberationResultController extends Controller
 {
-    public function __construct()
+    public function __construct(
+        protected DeliberationResultService $service)
     {
-        $this->middleware('permission:deliberation_results.view')->only(['index', 'show']);
-        $this->middleware('permission:deliberation_results.create')->only('store');
-        $this->middleware('permission:deliberation_results.update')->only('update');
-        $this->middleware('permission:deliberation_results.delete')->only('destroy');
+        // Add middleware here if needed, specially for permissions
     }
 
     public function index()
     {
-        $results = QueryBuilder::for(DeliberationResult::query())
-            ->with(['deliberationSession'])
-            ->allowedIncludes(['deliberationSession'])
-            ->allowedFilters([
-                AllowedFilter::exact('deliberation_session_id'),
-                AllowedFilter::exact('student_id'),
-                AllowedFilter::exact('decision'),
-                AllowedFilter::callback('is_with_honors', function ($query, $value) {
-                    $isWithHonors = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-                    if ($isWithHonors === null) {
-                        return;
-                    }
-
-                    $query->where('is_with_honors', $isWithHonors);
-                }),
-            ])
-            ->allowedSorts(['created_at', 'decision'])
-            ->defaultSort('-created_at')
-            ->get();
-
-        return $this->success(DeliberationResultResource::collection($results));
+        return response()->json($this->service->getAll());
     }
 
-    public function store(StoreDeliberationResultRequest $request)
+    public function store(Request $request)
     {
-        $result = DeliberationResult::create($request->validated());
+        $data = $request->validate([
+            'deliberation_session_id' => 'required|uuid',
+            'student_id' => 'required|uuid',
+            'decision' => 'required|string',
+            'is_with_honors' => 'sometimes|boolean',
+        ]);
 
-        return $this->success(
-            new DeliberationResultResource($result->load(['deliberationSession'])),
-            'Deliberation result created',
-            Response::HTTP_CREATED
-        );
+        $result = $this->service->create($data);
+
+        return response()->json($result, 201);
     }
 
-    public function show(DeliberationResult $deliberationResult)
+    public function show($id)
     {
-        return $this->success(
-            new DeliberationResultResource($deliberationResult->load(['deliberationSession']))
-        );
+        $result = $this->service->getById($id);
+        return $result ? response()->json($result) : response()->json(['message' => 'Not found'], 404);
     }
 
-    public function update(UpdateDeliberationResultRequest $request, DeliberationResult $deliberationResult)
+    public function update(Request $request, $id)
     {
-        $deliberationResult->update($request->validated());
+        $data = $request->only([
+            'decision', 'is_with_honors'
+        ]);
 
-        return $this->success(
-            new DeliberationResultResource($deliberationResult->refresh()->load(['deliberationSession'])),
-            'Deliberation result updated'
-        );
+        $result = $this->service->update($id, $data);
+
+        return $result ? response()->json($result) : response()->json(['message' => 'Not found'], 404);
     }
 
-    public function destroy(DeliberationResult $deliberationResult)
+    public function destroy($id)
     {
-        $deliberationResult->delete();
-
-        return $this->success(null, 'Deliberation result deleted');
+        return $this->service->delete($id)
+            ? response()->json(['message' => 'Deleted'])
+            : response()->json(['message' => 'Not found'], 404);
     }
 }

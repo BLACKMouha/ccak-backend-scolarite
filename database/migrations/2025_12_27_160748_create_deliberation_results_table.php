@@ -21,14 +21,18 @@ return new class extends Migration
             $table->enum('honor_level', ['PASSABLE', 'ASSEZ_BIEN', 'BIEN', 'TRES_BIEN'])->nullable();
             $table->timestamps();
 
-            $table->foreign('deliberation_session_id')->references('id')->on('deliberation_sessions')->cascadeOnDelete();
-            // $table->foreign('student_id')->references('id')->on('students')->cascadeOnDelete();
+            $table->foreign('deliberation_session_id')
+                ->references('id')
+                ->on('deliberation_sessions')
+                ->cascadeOnDelete();
+
+            $table->unique(['deliberation_session_id', 'student_id']);
+            $table->index('decision');
+            $table->index('is_with_honors');
+            $table->index('student_id');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('deliberation_results');

@@ -15,7 +15,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(PermissionSeeder::class);
+        $this->call([
+            PermissionSeeder::class,
+            // Seeders de délibération
+            DeliberationSessionSeeder::class,
+            DeliberationResultSeeder::class,
+        ]);
 
         $admin = User::factory()->create([
             'email' => 'test@example.com',

@@ -2,48 +2,149 @@
 
 namespace App\Http\Controllers\Academic;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\BaseApiController;
 use App\Http\Requests\Academic\StoreDeliberationSessionRequest;
-use App\Http\Requests\Academic\UpdateDeliberationSessionRequest;
-use App\Http\Resources\Academic\DeliberationSessionResource;
-use App\Models\DeliberationSession;
 use Illuminate\Http\Request;
+use App\Models\DeliberationSession;
+use App\Services\DeliberationService;
+use App\Services\MinutesGeneratorService;
+use Illuminate\Http\Response;
 
-class DeliberationSessionController extends Controller
+
+class DeliberationSessionController extends BaseApiController
 {
-    public function index(Request $request)
-    {
-        $sessions = DeliberationSession::query()
-            ->when($request->get('academic_program_id'), fn($q, $v) => $q->where('academic_program_id', $v))
-            ->when($request->get('academic_year_id'), fn($q, $v) => $q->where('academic_year_id', $v))
-            ->when($request->get('status'), fn($q, $v) => $q->where('status', $v))
-            ->orderByDesc('session_date')
-            ->paginate(20);
-
-        return DeliberationSessionResource::collection($sessions);
+    public function __construct(
+        protected DeliberationService $deliberationService,
+        protected MinutesGeneratorService $minutesService
+    ) {
+        // Add middleware here if needed, specially for permissions
     }
 
+    /**
+     * Display a listing of deliberation sessions !
+     *
+     * @response 200 {"data": [DeliberationSessionResource]}
+     */
+    public function index()
+    {
+        return response()->json($this->deliberationService->getAll());
+    }
+
+    /**
+     * Create a new deliberation session (Admin only)
+     *
+     * @response 201 {"data": DeliberationSessionResource}
+     */
     public function store(StoreDeliberationSessionRequest $request)
     {
-        $session = DeliberationSession::create($request->validated());
-        return new DeliberationSessionResource($session);
+        $result = $this->deliberationService->create($request->validated());
+
+        return response()->json($result, 201);
     }
 
-    public function show(DeliberationSession $deliberation_session)
+    /**
+     * Display the specified deliberation session.
+     *
+     * @response 200 {"data": DeliberationSessionResource}
+     */
+    public function show($id)
     {
-        $deliberation_session->load(['academicProgram', 'academicYear', 'president', 'results.student']);
-        return new DeliberationSessionResource($deliberation_session);
+        $result = $this->deliberationService->getById($id);
+        return $result ? response()->json($result) : response()->json(['message' => 'Not found'], 404);
     }
 
-    public function update(UpdateDeliberationSessionRequest $request, DeliberationSession $deliberation_session)
+    /**
+     * Update the specified deliberation session.
+     *
+     * @response 200 {"data": DeliberationSessionResource}
+     */
+    public function update(Request $request, $id)
     {
-        $deliberation_session->update($request->validated());
-        return new DeliberationSessionResource($deliberation_session->refresh());
+        $result = $this->deliberationService->update($id, $request->validated());
+
+        return $result ? response()->json($result) : response()->json(['message' => 'Not found'], 404);
     }
 
-    public function destroy(DeliberationSession $deliberation_session)
+    /**
+     * Remove the specified deliberation session.
+     *
+     * @response 200 {"data": null, "message": "Deliberation session deleted"}
+     */
+    public function destroy($id)
     {
-        $deliberation_session->delete();
-        return response()->noContent();
+        return $this->deliberationService->delete($id)
+            ? response()->json(['message' => 'Deleted'])
+            : response()->json(['message' => 'Not found'], 404);
+    }
+
+    /**
+     * Start a deliberation session
+     * POST /api/deliberations/{id}/start
+     */
+    public function start(DeliberationSession $deliberation_session)
+    {
+        if ($deliberation_session->status !== DeliberationSession::STATUS_SCHEDULED) {
+            return $this->error('Session must be in SCHEDULED status', Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $result = $this->deliberationService->startDeliberation($deliberation_session);
+
+            return response()->json($result, 201);
+        } catch (\Exception $e) {
+            return $this->error($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Complete a deliberation session
+     * POST /api/deliberations/{id}/complete
+     */
+    public function complete(DeliberationSession $deliberation_session)
+    {
+        if ($deliberation_session->status !== DeliberationSession::STATUS_IN_PROGRESS) {
+            return $this->error('Session must be in IN_PROGRESS status', Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $this->deliberationService->completeDeliberation($deliberation_session);
+
+            return response()->json([
+                'message' => 'Deliberation session completed successfully',
+                'session' => $deliberation_session->fresh(),
+            ]);
+        } catch (\Exception $e) {
+            return $this->error($e->getMessage(), Response::HTTP_BAD_REQUEST);
+        }
+    }
+
+    /**
+     * Get eligible students for deliberation
+     * GET /api/deliberations/{id}/students
+     */
+    public function getStudents(DeliberationSession $deliberation_session)
+    {
+        $students = $this->deliberationService->fetchEligibleStudents($deliberation_session);
+
+        return response()->json($students);
+    }
+
+    /**
+     * Generate minutes for a deliberation session
+     * GET /api/deliberations/{id}/minutes
+     */
+    public function generateMinutes(DeliberationSession $deliberation_session)
+    {
+        if ($deliberation_session->status !== DeliberationSession::STATUS_COMPLETED) {
+            return $this->error('Session must be COMPLETED to generate minutes', Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $path = $this->minutesService->generate($deliberation_session);
+
+            return response()->download($path, "minutes_{$deliberation_session->id}.pdf");
+        } catch (\Exception $e) {
+            return $this->error($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

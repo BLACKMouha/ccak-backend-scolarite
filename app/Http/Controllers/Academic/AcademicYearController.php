@@ -14,10 +14,10 @@ class AcademicYearController extends BaseApiController
 {
     public function __construct()
     {
-        $this->middleware('permission:academic_years.view')->only(['index', 'show']);
-        $this->middleware('permission:academic_years.create')->only('store');
-        $this->middleware('permission:academic_years.update')->only('update');
-        $this->middleware('permission:academic_years.delete')->only('destroy');
+        // $this->middleware('permission:academic_years.view')->only(['index', 'show']);
+        // $this->middleware('permission:academic_years.create')->only('store');
+        // $this->middleware('permission:academic_years.update')->only('update');
+        // $this->middleware('permission:academic_years.delete')->only('destroy');
     }
 
     public function index()

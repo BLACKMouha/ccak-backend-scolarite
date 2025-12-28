@@ -19,13 +19,10 @@ return new class extends Migration {
             $table->json('jury_members')->nullable();
             $table->timestamps();
 
-            $table->foreign('academic_program_id')->references('id')->on('academic_programs')->cascadeOnUpdate()->restrictOnDelete();
-            $table->foreign('academic_year_id')->references('id')->on('academic_years')->cascadeOnUpdate()->restrictOnDelete();
-            $table->foreign('presided_by')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
-
             $table->index(['academic_program_id', 'academic_year_id', 'semester']);
             $table->index('status');
             $table->index('session_date');
+            $table->index('presided_by');
         });
     }
 
