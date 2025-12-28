@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserRoleController;
+use App\Http\Controllers\Api\AuditController;
 
 Route::middleware('auth:api')->group(function () {
     Route::get('/user', function (Request $request) {
