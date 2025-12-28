@@ -16,7 +16,9 @@
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "*",
+        "owen-it/laravel-auditing": "^14.0",
         "robsontenorio/laravel-keycloak-guard": "*",
+        "simplesoftwareio/simple-qrcode": "^4.2",
         "spatie/laravel-permission": "*",
         "spatie/laravel-query-builder": "*"
     },

@@ -9,11 +9,13 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Ramsey\Uuid\Uuid;
 use Spatie\Permission\Traits\HasRoles;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
+use OwenIt\Auditing\Auditable as AuditableTrait;
 
-class User extends Authenticatable
+class User extends Authenticatable implements AuditableContract
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasUuids, HasRoles;
+    use HasFactory, Notifiable, HasUuids, HasRoles, AuditableTrait;
 
     public $incrementing = false;
     protected $keyType = 'string';
@@ -24,6 +26,17 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
+    public function initializeAuditable(): void
+    {
+        $this->auditEvents = ['created', 'updated', 'deleted', 'login'];
+        $this->auditExclude = [
+            'password',
+            'remember_token',
+            'created_at',
+            'updated_at',
+        ];
+    }
+
     protected $fillable = [
         'email',
         'password',
@@ -64,5 +77,45 @@ class User extends Authenticatable
     public function newUniqueId(): string
     {
         return Uuid::uuid7()->toString();
+    }
+
+    /**
+     * Transform audit data for User
+     */
+    public function transformAudit(array $data): array
+    {
+        // Add user UUID
+        $data['user_uuid'] = $this->getKey();
+
+        // Mask sensitive information
+        if (isset($data['old_values']['password'])) {
+            $data['old_values']['password'] = '***MASKED***';
+        }
+
+        if (isset($data['new_values']['password'])) {
+            $data['new_values']['password'] = '***MASKED***';
+        }
+
+        return $data;
+    }
+
+    /**
+     * Log user login event
+     */
+    public function logLogin(string $ipAddress): void
+    {
+        $this->auditEvent = 'login';
+        $this->isCustomEvent = true;
+        $this->auditCustomOld = [];
+        $this->auditCustomNew = [
+            'last_login_at' => now()->toDateTimeString(),
+            'ip_address' => $ipAddress,
+            'user_agent' => request()->userAgent(),
+        ];
+
+        $this->save();
+
+        // Also update the last_login_at field
+        $this->update(['last_login_at' => now()]);
     }
 }
