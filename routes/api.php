@@ -29,12 +29,10 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('academic-programs', \App\Http\Controllers\Academic\AcademicProgramController::class);
     Route::apiResource('course-units', \App\Http\Controllers\Academic\CourseUnitController::class);
     Route::apiResource('courses', \App\Http\Controllers\Academic\CourseController::class);
-
     Route::get('roles', [RoleController::class, 'index']);
     Route::post('roles', [RoleController::class, 'store']);
     Route::put('roles/{role}', [RoleController::class, 'update']);
     Route::put('users/{user}/roles', [UserRoleController::class, 'update']);
-
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/audits', [AuditController::class, 'index']);
         Route::get('/audits/{model}/{id}', [AuditController::class, 'show']);
