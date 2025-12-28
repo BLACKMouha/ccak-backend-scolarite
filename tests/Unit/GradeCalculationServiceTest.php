@@ -214,24 +214,188 @@ class GradeCalculationServiceTest extends TestCase
     }
 
     /** @test */
-    public function it_calculates_gpa_on_4_scale()
+    public function it_converts_grades_to_gpa_scale_correctly()
     {
         $testCases = [
-            ['average' => 17, 'expected_gpa' => 4.0, 'expected_letter' => 'A'],
-            ['average' => 15, 'expected_gpa' => 3.5, 'expected_letter' => 'B+'],
-            ['average' => 13, 'expected_gpa' => 3.0, 'expected_letter' => 'B'],
-            ['average' => 11.5, 'expected_gpa' => 2.5, 'expected_letter' => 'C+'],
-            ['average' => 10, 'expected_gpa' => 2.0, 'expected_letter' => 'C'],
-            ['average' => 9, 'expected_gpa' => 1.0, 'expected_letter' => 'D'],
-            ['average' => 7, 'expected_gpa' => 0.0, 'expected_letter' => 'F'],
+            ['grade' => 19, 'expected_gpa' => 4.0],
+            ['grade' => 17, 'expected_gpa' => 3.7],
+            ['grade' => 15, 'expected_gpa' => 3.3],
+            ['grade' => 13, 'expected_gpa' => 3.0],
+            ['grade' => 11, 'expected_gpa' => 2.7],
+            ['grade' => 9, 'expected_gpa' => 2.0],
+            ['grade' => 7, 'expected_gpa' => 1.0],
+            ['grade' => 5, 'expected_gpa' => 0.0],
         ];
 
         foreach ($testCases as $case) {
-            $result = $this->service->calculateGPA($case['average']);
-
-            $this->assertEquals($case['expected_gpa'], $result['gpa']);
-            $this->assertEquals($case['expected_letter'], $result['letter_grade']);
+            $gpa = $this->service->convertToGpaScale($case['grade']);
+            $this->assertEquals($case['expected_gpa'], $gpa);
         }
+    }
+
+    /** @test */
+    public function it_gets_letter_grades_correctly()
+    {
+        $testCases = [
+            ['grade' => 19, 'expected_letter' => 'A+'],
+            ['grade' => 17, 'expected_letter' => 'A'],
+            ['grade' => 15, 'expected_letter' => 'B+'],
+            ['grade' => 13, 'expected_letter' => 'B'],
+            ['grade' => 11, 'expected_letter' => 'C+'],
+            ['grade' => 9, 'expected_letter' => 'C'],
+            ['grade' => 7, 'expected_letter' => 'D'],
+            ['grade' => 5, 'expected_letter' => 'F'],
+        ];
+
+        foreach ($testCases as $case) {
+            $letter = $this->service->getLetterGrade($case['grade']);
+            $this->assertEquals($case['expected_letter'], $letter);
+        }
+    }
+
+    /** @test */
+    public function it_calculates_semester_gpa_with_credits()
+    {
+        // Create second course
+        $course2 = Course::create([
+            'code' => 'CS102',
+            'name' => 'Data Structures',
+            'credits' => 4,
+            'coefficient' => 3,
+            'is_active' => true,
+        ]);
+
+        $enrollment2 = CourseEnrollment::create([
+            'student_id' => $this->student->id,
+            'course_id' => $course2->id,
+        ]);
+
+        // Course 1: Average 15/20 (GPA 3.3), Coefficient 2
+        Grade::create([
+            'course_enrollment_id' => $this->enrollment->id,
+            'student_id' => $this->student->id,
+            'course_id' => $this->course->id,
+            'type' => 'EXAM',
+            'score' => 15,
+            'max_score' => 20,
+            'weight' => 1.0,
+            'entered_by' => $this->student->id,
+            'status' => 'PUBLISHED',
+        ]);
+
+        // Course 2: Average 12/20 (GPA 3.0), Coefficient 3
+        Grade::create([
+            'course_enrollment_id' => $enrollment2->id,
+            'student_id' => $this->student->id,
+            'course_id' => $course2->id,
+            'type' => 'EXAM',
+            'score' => 12,
+            'max_score' => 20,
+            'weight' => 1.0,
+            'entered_by' => $this->student->id,
+            'status' => 'PUBLISHED',
+        ]);
+
+        $result = $this->service->calculateGPA(
+            $this->student->id,
+            [$this->course->id, $course2->id]
+        );
+
+        // Expected GPA: (3.3 * 2 + 3.0 * 3) / (2 + 3) = (6.6 + 9) / 5 = 3.12
+        $this->assertEquals(3.12, $result['gpa']);
+        $this->assertEquals(5, $result['total_credits']);
+        $this->assertCount(2, $result['courses_gpa']);
+
+        // Check individual course data
+        $courseGpaData = collect($result['courses_gpa'])->keyBy('course_code');
+        $this->assertEquals(3.3, $courseGpaData['CS101']['gpa']);
+        $this->assertEquals('B+', $courseGpaData['CS101']['letter_grade']);
+        $this->assertEquals(3.0, $courseGpaData['CS102']['gpa']);
+        $this->assertEquals('B', $courseGpaData['CS102']['letter_grade']);
+    }
+
+    /** @test */
+    public function it_calculates_cumulative_gpa_across_semesters()
+    {
+        // Setup courses for multiple semesters
+        $course2 = Course::create([
+            'code' => 'CS102',
+            'name' => 'Math',
+            'credits' => 3,
+            'coefficient' => 2,
+            'is_active' => true,
+        ]);
+
+        $course3 = Course::create([
+            'code' => 'CS103',
+            'name' => 'Physics',
+            'credits' => 4,
+            'coefficient' => 3,
+            'is_active' => true,
+        ]);
+
+        $enrollment2 = CourseEnrollment::create([
+            'student_id' => $this->student->id,
+            'course_id' => $course2->id,
+        ]);
+
+        $enrollment3 = CourseEnrollment::create([
+            'student_id' => $this->student->id,
+            'course_id' => $course3->id,
+        ]);
+
+        // Semester 1: Course 1 (15/20, coeff 2) and Course 2 (12/20, coeff 2)
+        Grade::create([
+            'course_enrollment_id' => $this->enrollment->id,
+            'student_id' => $this->student->id,
+            'course_id' => $this->course->id,
+            'type' => 'EXAM',
+            'score' => 15,
+            'max_score' => 20,
+            'weight' => 1.0,
+            'entered_by' => $this->student->id,
+            'status' => 'PUBLISHED',
+        ]);
+
+        Grade::create([
+            'course_enrollment_id' => $enrollment2->id,
+            'student_id' => $this->student->id,
+            'course_id' => $course2->id,
+            'type' => 'EXAM',
+            'score' => 12,
+            'max_score' => 20,
+            'weight' => 1.0,
+            'entered_by' => $this->student->id,
+            'status' => 'PUBLISHED',
+        ]);
+
+        // Semester 2: Course 3 (16/20, coeff 3)
+        Grade::create([
+            'course_enrollment_id' => $enrollment3->id,
+            'student_id' => $this->student->id,
+            'course_id' => $course3->id,
+            'type' => 'EXAM',
+            'score' => 16,
+            'max_score' => 20,
+            'weight' => 1.0,
+            'entered_by' => $this->student->id,
+            'status' => 'PUBLISHED',
+        ]);
+
+        $result = $this->service->calculateCumulativeGPA(
+            $this->student->id,
+            [
+                [$this->course->id, $course2->id], // Semester 1
+                [$course3->id], // Semester 2
+            ]
+        );
+
+        // Semester 1 GPA: (3.3*2 + 3.0*2) / 4 = 3.15
+        // Semester 2 GPA: (3.7*3) / 3 = 3.7
+        // Cumulative: (3.3*2 + 3.0*2 + 3.7*3) / 7 = 3.34
+        $this->assertEqualsWithDelta(3.343, $result['cumulative_gpa'], 0.01);
+        $this->assertEquals(7, $result['total_credits']);
+        $this->assertCount(2, $result['semesters']);
     }
 
     /** @test */
@@ -542,7 +706,6 @@ class GradeCalculationServiceTest extends TestCase
         // Semester average: (15 * 2 + 12 * 2) / 4 = 13.5
         $this->assertEquals(13.5, $result['semester_average']);
         $this->assertEquals(3.0, $result['gpa']['gpa']);
-        $this->assertEquals('B', $result['gpa']['letter_grade']);
         $this->assertEquals('PASSED', $result['overall_status']);
         $this->assertTrue($result['passed']);
     }
