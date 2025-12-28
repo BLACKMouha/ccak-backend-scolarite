@@ -33,4 +33,9 @@ Route::middleware('auth:api')->group(function () {
     Route::post('roles', [RoleController::class, 'store']);
     Route::put('roles/{role}', [RoleController::class, 'update']);
     Route::put('users/{user}/roles', [UserRoleController::class, 'update']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/audits', [AuditController::class, 'index']);
+        Route::get('/audits/{model}/{id}', [AuditController::class, 'show']);
+    });
 });
