@@ -21,8 +21,13 @@ class KeycloakUserProvider extends EloquentUserProvider
         }
 
         $userType = $this->resolveUserType($claims);
+
+        // If Keycloak token doesn't contain a recognized role, fall back to
+        // a sensible default so the application can still provision a user.
+        // This avoids throwing a UserNotFoundException when tokens lack role
+        // claims in development or third-party tokens.
         if (! $userType) {
-            return null;
+            $userType = env('KEYCLOAK_DEFAULT_USER_TYPE', 'STUDENT');
         }
 
         $email = $claims['email'] ?? null;
@@ -69,11 +74,11 @@ class KeycloakUserProvider extends EloquentUserProvider
 
         $currentRoles = method_exists($user, 'getRoleNames')
             ? $user->getRoleNames()
-                ->map(fn ($role) => strtoupper($role))
-                ->filter(fn ($role) => isset($allowedRolesSet[$role]))
-                ->unique()
-                ->values()
-                ->all()
+            ->map(fn($role) => strtoupper($role))
+            ->filter(fn($role) => isset($allowedRolesSet[$role]))
+            ->unique()
+            ->values()
+            ->all()
             : [];
 
         if ($roles !== $currentRoles) {
@@ -98,14 +103,14 @@ class KeycloakUserProvider extends EloquentUserProvider
         $roles = Arr::wrap(data_get($claims, 'realm_access.roles', []));
 
         $resourceRoles = collect(data_get($claims, 'resource_access', []))
-            ->map(fn ($access) => Arr::wrap(data_get($access, 'roles', [])))
+            ->map(fn($access) => Arr::wrap(data_get($access, 'roles', [])))
             ->flatten()
             ->all();
 
         return collect(array_merge($roles, $resourceRoles))
-            ->filter(fn ($role) => is_string($role) && $role !== '')
-            ->map(fn ($role) => strtoupper($role))
-            ->filter(fn ($role) => isset($allowedRolesSet[$role]))
+            ->filter(fn($role) => is_string($role) && $role !== '')
+            ->map(fn($role) => strtoupper($role))
+            ->filter(fn($role) => isset($allowedRolesSet[$role]))
             ->unique()
             ->values()
             ->all();
@@ -116,8 +121,8 @@ class KeycloakUserProvider extends EloquentUserProvider
         $roles = config('keycloak.role_allowlist', self::DEFAULT_ROLE_ALLOWLIST);
 
         return collect(Arr::wrap($roles))
-            ->filter(fn ($role) => is_string($role) && $role !== '')
-            ->map(fn ($role) => strtoupper(trim($role)))
+            ->filter(fn($role) => is_string($role) && $role !== '')
+            ->map(fn($role) => strtoupper(trim($role)))
             ->unique()
             ->values()
             ->all();

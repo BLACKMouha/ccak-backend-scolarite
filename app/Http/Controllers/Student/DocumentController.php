@@ -12,6 +12,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\QueryBuilder;
 
 class DocumentController extends BaseApiController
 {
@@ -26,11 +28,21 @@ class DocumentController extends BaseApiController
     /**
      * Display a listing of the resource.
      */
-    public function index(string $studentId): JsonResponse
+    public function index(Request $request, string $studentId): JsonResponse
     {
         try {
             $student = Student::findOrFail($studentId);
-            $documents = $student->documents()->with('reviewer')->get();
+
+            $documents = QueryBuilder::for(Document::where('student_id', $student->id))
+                ->with('reviewer')
+                ->allowedIncludes(['reviewer'])
+                ->allowedFilters([
+                    AllowedFilter::exact('type'),
+                    AllowedFilter::exact('status'),
+                ])
+                ->allowedSorts(['id', 'type', 'status', 'uploaded_at', 'created_at'])
+                ->defaultSort('-created_at')
+                ->paginate($request->get('per_page', 15));
 
             return $this->success($documents, 'Documents récupérés avec succès.');
         } catch (\Exception $e) {
@@ -54,7 +66,7 @@ class DocumentController extends BaseApiController
             $fileName = Str::uuid() . '.' . $extension;
 
             // Stocker le fichier de manière sécurisée
-            $path = $file->storeAs('documents', $fileName, 'local');
+            $path = $file->storeAs('documents', $fileName, 'externeStorage');
 
             // Créer l'enregistrement du document
             $document = Document::create([
@@ -73,8 +85,8 @@ class DocumentController extends BaseApiController
             );
         } catch (\Exception $e) {
             // Supprimer le fichier en cas d'erreur
-            if (isset($path) && Storage::disk('local')->exists($path)) {
-                Storage::disk('local')->delete($path);
+            if (isset($path) && Storage::disk('externeStorage')->exists($path)) {
+                Storage::disk('externeStorage')->delete($path);
             }
 
             return $this->error('Erreur lors de l\'upload du document.', 500);
@@ -104,6 +116,9 @@ class DocumentController extends BaseApiController
         try {
             $document = Document::findOrFail($id);
 
+            // Autoriser la revue
+            $this->authorize('review', $document);
+
             // Vérifier que le document est en attente
             if (!$document->isPending()) {
                 return $this->error('Ce document a déjà été revu.', 400);
@@ -131,16 +146,78 @@ class DocumentController extends BaseApiController
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $studentId, string $id): JsonResponse
     {
-        //
+        try {
+            $student = Student::findOrFail($studentId);
+            $document = $student->documents()->findOrFail($id);
+
+            // Only allow updating pending documents
+            if (!$document->isPending()) {
+                return $this->error('Seuls les documents en attente peuvent être modifiés.', 400);
+            }
+
+            $validated = $request->validate([
+                'type' => 'sometimes|required|string|in:' . implode(',', array_keys(Document::typeLabels())),
+                'document' => 'sometimes|required|file|mimes:pdf,jpg,jpeg,png|max:5120', // 5MB max
+            ]);
+
+            if ($request->hasFile('document')) {
+                // Delete old file
+                if (Storage::disk('externeStorage')->exists($document->file_path)) {
+                    Storage::disk('externeStorage')->delete($document->file_path);
+                }
+
+                // Upload new file
+                $file = $request->file('document');
+                $originalName = $file->getClientOriginalName();
+                $extension = $file->getClientOriginalExtension();
+                $fileName = Str::uuid() . '.' . $extension;
+                $path = $file->storeAs('documents', $fileName, 'externeStorage');
+
+                $document->update([
+                    'file_path' => $path,
+                    'file_name' => $originalName,
+                    'uploaded_at' => now(),
+                ]);
+            }
+
+            if ($request->has('type')) {
+                $document->update(['type' => $request->type]);
+            }
+
+            return $this->success(
+                $document->load('student'),
+                'Document mis à jour avec succès.'
+            );
+        } catch (\Exception $e) {
+            return $this->error('Erreur lors de la mise à jour du document.', 500);
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+
+    public function destroy(string $studentId, string $id): JsonResponse
     {
-        //
+        try {
+            $student = Student::findOrFail($studentId);
+            $document = $student->documents()->findOrFail($id);
+
+
+            if (!$document->isPending()) {
+                return $this->error('Seuls les documents en attente peuvent être supprimés.', 400);
+            }
+
+
+            if (Storage::disk('externeStorage')->exists($document->file_path)) {
+                Storage::disk('externeStorage')->delete($document->file_path);
+            }
+
+
+            $document->delete();
+
+            return $this->success(null, 'Document supprimé avec succès.');
+        } catch (\Exception $e) {
+            return $this->error('Erreur lors de la suppression du document.', 500);
+        }
     }
 }

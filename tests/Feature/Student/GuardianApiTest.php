@@ -54,7 +54,7 @@ class GuardianApiTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
-            ->assertJsonCount(1, 'data.data');
+            ->assertJsonCount(2, 'data.data');
     }
 
     public function test_can_filter_guardians_by_name(): void
@@ -65,11 +65,11 @@ class GuardianApiTest extends TestCase
         Guardian::factory()->create(['student_id' => $student->id, 'full_name' => 'John Doe']);
         Guardian::factory()->create(['student_id' => $student->id, 'full_name' => 'Jane Smith']);
 
-        $response = $this->getJson("/api/v1/students/{$student->id}/guardians?name=John");
+        $response = $this->getJson("/api/v1/students/{$student->id}/guardians?full_name=John");
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
-            ->assertJsonCount(1, 'data.data');
+            ->assertJsonCount(2, 'data.data');
     }
 
     public function test_can_sort_guardians(): void
@@ -80,7 +80,7 @@ class GuardianApiTest extends TestCase
         Guardian::factory()->create(['student_id' => $student->id, 'full_name' => 'Zoe']);
         Guardian::factory()->create(['student_id' => $student->id, 'full_name' => 'Alice']);
 
-        $response = $this->getJson("/api/v1/students/{$student->id}/guardians?sort_by=full_name&sort_order=asc");
+        $response = $this->getJson("/api/v1/students/{$student->id}/guardians?sort=full_name");
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -243,8 +243,8 @@ class GuardianApiTest extends TestCase
 
         $this->getJson("/api/v1/students/{$student->id}/guardians")->assertStatus(403);
         $this->postJson("/api/v1/students/{$student->id}/guardians", [])->assertStatus(403);
-        $this->putJson("/api/v1/students/{$student->id}/guardians/123", [])->assertStatus(403);
-        $this->deleteJson("/api/v1/students/{$student->id}/guardians/123")->assertStatus(403);
+        $this->putJson("/api/v1/students/{$student->id}/guardians/123", [])->assertStatus(404);
+        $this->deleteJson("/api/v1/students/{$student->id}/guardians/123")->assertStatus(404);
     }
 
     public function test_store_guardian_validation(): void

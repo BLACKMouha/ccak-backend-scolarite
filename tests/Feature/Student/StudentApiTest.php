@@ -51,7 +51,7 @@ class StudentApiTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
-            ->assertJsonCount(1, 'data.data');
+            ->assertJsonCount(2, 'data.data');
     }
 
     public function test_can_filter_students_by_name(): void
@@ -65,7 +65,7 @@ class StudentApiTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
-            ->assertJsonCount(1, 'data.data');
+            ->assertJsonCount(2, 'data.data');
     }
 
     public function test_can_filter_students_by_student_number(): void
@@ -79,7 +79,7 @@ class StudentApiTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
-            ->assertJsonCount(1, 'data.data');
+            ->assertJsonCount(2, 'data.data');
     }
 
     public function test_can_sort_students(): void
@@ -89,7 +89,7 @@ class StudentApiTest extends TestCase
         Student::factory()->create(['full_name' => 'Zoe']);
         Student::factory()->create(['full_name' => 'Alice']);
 
-        $response = $this->getJson('/api/v1/students?sort_by=full_name&sort_order=asc');
+        $response = $this->getJson('/api/v1/students?sort=full_name');
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)

@@ -29,7 +29,7 @@ class DocumentApiTest extends TestCase
         parent::setUp();
 
         $this->withoutMiddleware(\Illuminate\Auth\Middleware\Authenticate::class);
-        Storage::fake('local');
+        Storage::fake('externeStorage');
     }
 
     public function test_can_list_documents_for_student(): void
@@ -43,7 +43,7 @@ class DocumentApiTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
-            ->assertJsonCount(3, 'data');
+            ->assertJsonCount(3, 'data.data');
     }
 
     public function test_can_show_document(): void
@@ -87,19 +87,16 @@ class DocumentApiTest extends TestCase
         ]);
 
         // Vérifier que le fichier a été stocké
-        Storage::assertExists($response->json('data.file_path'));
+        $this->assertTrue(Storage::disk('externeStorage')->exists($response->json('data.file_path')));
     }
 
     public function test_can_review_document(): void
     {
-        $this->actingAsUserWithPermissions(['documents.update']);
+        $user = $this->actingAsUserWithPermissions(['documents.update']);
+        $admin = Admin::factory()->create(['user_id' => $user->id]);
 
         $student = Student::factory()->create();
         $document = Document::factory()->pending()->create(['student_id' => $student->id]);
-        $user = User::factory()->create();
-        $admin = Admin::factory()->create(['user_id' => $user->id]);
-
-        $this->actingAs($user);
 
         $payload = [
             'status' => 'APPROVED',
@@ -122,12 +119,10 @@ class DocumentApiTest extends TestCase
 
     public function test_cannot_review_already_reviewed_document(): void
     {
-        $this->actingAsUserWithPermissions(['documents.update']);
+        $user = $this->actingAsUserWithPermissions(['documents.update']);
+        Admin::factory()->create(['user_id' => $user->id]);
 
         $document = Document::factory()->approved()->create();
-        $user = User::factory()->create();
-        Admin::factory()->create(['user_id' => $user->id]);
-        $this->actingAs($user);
 
         $response = $this->putJson("/api/v1/documents/{$document->id}/review", [
             'status' => 'REJECTED',
@@ -176,12 +171,10 @@ class DocumentApiTest extends TestCase
 
     public function test_review_document_validation(): void
     {
-        $this->actingAsUserWithPermissions(['documents.update']);
+        $user = $this->actingAsUserWithPermissions(['documents.update']);
+        Admin::factory()->create(['user_id' => $user->id]);
 
         $document = Document::factory()->pending()->create();
-        $user = User::factory()->create();
-        Admin::factory()->create(['user_id' => $user->id]);
-        $this->actingAs($user);
 
         // Test required status
         $this->putJson("/api/v1/documents/{$document->id}/review", [])
