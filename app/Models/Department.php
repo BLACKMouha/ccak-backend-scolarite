@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\UsesUuidV7;
+use App\Models\Concerns\AuditableWithUuidV7;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Department extends Model
 {
     use HasFactory;
-    use UsesUuidV7;
+    use AuditableWithUuidV7;
     use SoftDeletes;
 
     protected $fillable = [
@@ -27,6 +27,10 @@ class Department extends Model
         'is_active' => 'boolean',
     ];
 
+    // Audit configuration for SoftDeletes
+    public $auditEvents = ['created', 'updated', 'deleted', 'restored', 'forceDeleted'];
+    public $auditExclude = ['created_at', 'updated_at', 'deleted_at'];
+
     public function faculty(): BelongsTo
     {
         return $this->belongsTo(Faculty::class);
@@ -40,5 +44,26 @@ class Department extends Model
     public function head(): BelongsTo
     {
         return $this->belongsTo(User::class, 'head_id');
+    }
+
+    /**
+     * Custom audit transformation
+     */
+    public function transformAudit(array $data): array
+    {
+        $data = parent::transformAudit($data);
+
+        // Add faculty information
+        if ($this->faculty) {
+            $data['faculty_name'] = $this->faculty->name;
+            $data['faculty_code'] = $this->faculty->code;
+        }
+
+        // Add head information
+        if ($this->head) {
+            $data['head_name'] = $this->head->email;
+        }
+
+        return $data;
     }
 }

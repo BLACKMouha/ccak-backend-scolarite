@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\UsesUuidV7;
+use App\Models\Concerns\AuditableWithUuidV7;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Faculty extends Model
 {
     use HasFactory;
-    use UsesUuidV7;
+    use AuditableWithUuidV7;
 
     protected $fillable = [
         'name',
@@ -23,6 +23,10 @@ class Faculty extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    // Audit configuration
+    public $auditEvents = ['created', 'updated', 'deleted'];
+    public $auditExclude = ['created_at', 'updated_at'];
 
     public function departments(): HasMany
     {
@@ -37,5 +41,20 @@ class Faculty extends Model
     public function getDisplayNameAttribute(): string
     {
         return "{$this->code} - {$this->name}";
+    }
+
+    /**
+     * Custom audit transformation
+     */
+    public function transformAudit(array $data): array
+    {
+        $data = parent::transformAudit($data);
+
+        // Add dean information
+        if ($this->dean) {
+            $data['dean_email'] = $this->dean->email;
+        }
+
+        return $data;
     }
 }
