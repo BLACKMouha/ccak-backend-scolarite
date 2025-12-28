@@ -1,9 +1,13 @@
 <?php
 
+use App\Http\Controllers\Academic\AcademicYearController;
+use App\Http\Controllers\Academic\CourseEnrollmentController;
+use App\Http\Controllers\Academic\EnrollmentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserRoleController;
+use App\Models\Course;
 
 Route::middleware('auth:api')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -28,9 +32,27 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('academic-programs', \App\Http\Controllers\Academic\AcademicProgramController::class);
     Route::apiResource('course-units', \App\Http\Controllers\Academic\CourseUnitController::class);
     Route::apiResource('courses', \App\Http\Controllers\Academic\CourseController::class);
+    Route::apiResource('academic-years', \App\Http\Controllers\Academic\AcademicYearController::class);
+    Route::apiResource('enrollments', \App\Http\Controllers\Academic\EnrollmentController::class);
+    Route::apiResource('course-enrollments', \App\Http\Controllers\Academic\CourseEnrollmentController::class);
 
     Route::get('roles', [RoleController::class, 'index']);
     Route::post('roles', [RoleController::class, 'store']);
     Route::put('roles/{role}', [RoleController::class, 'update']);
     Route::put('users/{user}/roles', [UserRoleController::class, 'update']);
+
+    // Enrollments
+    Route::get('/students/{id}/enrollments', [EnrollmentController::class, 'getByStudent']);
+
+    // Academic Years
+    Route::get('/academic-years/current', [AcademicYearController::class, 'current']);
+    Route::put('/academic-years/{id}/set-current', [AcademicYearController::class, 'setCurrent']);
+
+    // Course Enrollments
+    Route::post('enrollments/{id}/courses', [CourseEnrollmentController::class, 'enrollCourse']);
+    Route::get('enrollments/{id}/courses', [CourseEnrollmentController::class, 'getCourses']);
+    Route::delete('enrollments/{enrollmentId}/courses/{courseEnrollmentId}', [CourseEnrollmentController::class, 'dropCourse']);
+    Route::get('courses/{id}/availability', [CourseEnrollmentController::class, 'checkAvailability']);
+    Route::get('programs/{id}/available-courses', [CourseEnrollmentController::class, 'getAvailableCoursesByProgram']);
+
 });

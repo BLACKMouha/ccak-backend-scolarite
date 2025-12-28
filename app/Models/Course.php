@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Course extends Model
 {
@@ -45,5 +46,21 @@ class Course extends Model
     public function getPrerequisitesAttribute($value): array
     {
         return is_array($value) ? $value : (json_decode($value, true) ?: []);
+    }
+
+    // HasMany course enrollments
+    public function courseEnrollments(): HasMany
+    {
+        return $this->hasMany(CourseEnrollment::class);
+    }
+
+    // Get current enrollment count
+    public function getCurrentEnrollmentCount($academicYearId, $semester): int
+    {
+        return $this->courseEnrollments()
+            ->where('academic_year_id', $academicYearId)
+            ->where('semester', $semester)
+            ->where('status', CourseEnrollment::STATUS_ENROLLED)
+            ->count();
     }
 }
