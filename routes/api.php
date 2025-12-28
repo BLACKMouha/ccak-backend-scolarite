@@ -7,10 +7,14 @@ use App\Http\Controllers\Academic\DepartmentController;
 use App\Http\Controllers\Academic\FacultyController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\GeneratedDocumentController;
+use App\Http\Controllers\Academic\AcademicYearController;
+use App\Http\Controllers\Academic\CourseEnrollmentController;
+use App\Http\Controllers\Academic\EnrollmentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserRoleController;
+use App\Models\Course;
 
 Route::middleware('auth:api')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -71,4 +75,19 @@ Route::middleware('auth:api')->group(function () {
     Route::post('roles', [RoleController::class, 'store']);
     Route::put('roles/{role}', [RoleController::class, 'update']);
     Route::put('users/{user}/roles', [UserRoleController::class, 'update']);
+
+    // Enrollments
+    Route::get('/students/{id}/enrollments', [EnrollmentController::class, 'getByStudent']);
+
+    // Academic Years
+    Route::get('/academic-years/current', [AcademicYearController::class, 'current']);
+    Route::put('/academic-years/{id}/set-current', [AcademicYearController::class, 'setCurrent']);
+
+    // Course Enrollments
+    Route::post('enrollments/{id}/courses', [CourseEnrollmentController::class, 'enrollCourse']);
+    Route::get('enrollments/{id}/courses', [CourseEnrollmentController::class, 'getCourses']);
+    Route::delete('enrollments/{enrollmentId}/courses/{courseEnrollmentId}', [CourseEnrollmentController::class, 'dropCourse']);
+    Route::get('courses/{id}/availability', [CourseEnrollmentController::class, 'checkAvailability']);
+    Route::get('programs/{id}/available-courses', [CourseEnrollmentController::class, 'getAvailableCoursesByProgram']);
+
 });
