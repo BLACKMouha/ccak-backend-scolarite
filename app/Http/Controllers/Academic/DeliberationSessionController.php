@@ -2,139 +2,124 @@
 
 namespace App\Http\Controllers\Academic;
 
-use App\Http\Controllers\BaseApiController;
-use App\Http\Requests\Academic\StoreDeliberationSessionRequest;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use App\Models\DeliberationSession;
 use App\Services\DeliberationService;
 use App\Services\MinutesGeneratorService;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
-
-class DeliberationSessionController extends BaseApiController
+class DeliberationSessionController extends Controller
 {
-    public function __construct(
-        protected DeliberationService $deliberationService,
-        protected MinutesGeneratorService $minutesService
-    ) {
-        // Add middleware here if needed, specially for permissions
-    }
+    protected $service;
+    protected $minutesService;
 
-    /**
-     * Display a listing of deliberation sessions !
-     *
-     * @response 200 {"data": [DeliberationSessionResource]}
-     */
-    public function index()
+    public function __construct(DeliberationService $service, MinutesGeneratorService $minutesService)
     {
-        return response()->json($this->deliberationService->getAll());
+        $this->service = $service;
+        $this->minutesService = $minutesService;
+        //
+        $this->middleware('permission:deliberation_sessions.view')->only(['index', 'show']);
+        $this->middleware('permission:deliberation_sessions.create')->only('store');
+        $this->middleware('permission:deliberation_sessions.update')->only('update');
+        $this->middleware('permission:deliberation_sessions.delete')->only('destroy');
     }
 
-    /**
-     * Create a new deliberation session (Admin only)
-     *
-     * @response 201 {"data": DeliberationSessionResource}
-     */
-    public function store(StoreDeliberationSessionRequest $request)
+    public function index(Request $request)
     {
-        $result = $this->deliberationService->create($request->validated());
+        $perPage = $request->query('per_page', 15);
+        $page = $request->query('page', 1);
 
-        return response()->json($result, 201);
+        $query = DeliberationSession::query()
+            ->with(['academicProgram', 'academicYear', 'president', 'juryMembers']);
+
+        if ($request->has('academic_program_id')) {
+            $query->where('academic_program_id', $request->query('academic_program_id'));
+        }
+
+        if ($request->has('academic_year_id')) {
+            $query->where('academic_year_id', $request->query('academic_year_id'));
+        }
+
+        if ($request->has('presided_by')) {
+            $query->where('presided_by', $request->query('presided_by'));
+        }
+
+        if ($request->has('status')) {
+            $query->where('status', $request->query('status'));
+        }
+
+        if ($request->has('session_name')) {
+            $query->where('session_name', $request->query('session_name'));
+        }
+
+        $sessions = $query->orderBy('created_at', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json($sessions);
     }
 
-    /**
-     * Display the specified deliberation session.
-     *
-     * @response 200 {"data": DeliberationSessionResource}
-     */
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'academic_program_id' => 'required|uuid',
+            'academic_year_id' => 'required|uuid',
+            'semester' => 'required|integer',
+            'session_name' => 'required|string|max:255',
+            'session_date' => 'required|date',
+            'status' => 'sometimes|in:SCHEDULED,IN_PROGRESS,COMPLETED,CLOSED',
+            'presided_by' => 'required|uuid',
+            'jury_members' => 'nullable|array',
+        ]);
+
+        $session = $this->service->create($data);
+
+        return response()->json($session, 201);
+    }
+
     public function show($id)
     {
-        $result = $this->deliberationService->getById($id);
-        return $result ? response()->json($result) : response()->json(['message' => 'Not found'], 404);
+        $session = $this->service->getById($id);
+        return $session ? response()->json($session) : response()->json(['message' => 'Not found'], 404);
     }
 
-    /**
-     * Update the specified deliberation session.
-     *
-     * @response 200 {"data": DeliberationSessionResource}
-     */
     public function update(Request $request, $id)
     {
-        $result = $this->deliberationService->update($id, $request->validated());
+        $data = $request->only([
+            'semester', 'session_name', 'session_date', 'status', 'presided_by', 'jury_members'
+        ]);
 
-        return $result ? response()->json($result) : response()->json(['message' => 'Not found'], 404);
+        $session = $this->service->update($id, $data);
+
+        return $session ? response()->json($session) : response()->json(['message' => 'Not found'], 404);
     }
 
-    /**
-     * Remove the specified deliberation session.
-     *
-     * @response 200 {"data": null, "message": "Deliberation session deleted"}
-     */
     public function destroy($id)
     {
-        return $this->deliberationService->delete($id)
+        return $this->service->delete($id)
             ? response()->json(['message' => 'Deleted'])
             : response()->json(['message' => 'Not found'], 404);
     }
 
-    /**
-     * Start a deliberation session
-     * POST /api/deliberations/{id}/start
-     */
-    public function start(DeliberationSession $deliberation_session)
+    public function changeStatus(Request $request, $id)
     {
-        if ($deliberation_session->status !== DeliberationSession::STATUS_SCHEDULED) {
-            return $this->error('Session must be in SCHEDULED status', Response::HTTP_BAD_REQUEST);
-        }
+        $request->validate([
+            'status' => 'required|in:SCHEDULED,IN_PROGRESS,COMPLETED,CLOSED'
+        ]);
 
-        try {
-            $result = $this->deliberationService->startDeliberation($deliberation_session);
+        $session = $this->service->changeStatus($id, $request->status);
 
-            return response()->json($result, 201);
-        } catch (\Exception $e) {
-            return $this->error($e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        return $session ? response()->json($session) : response()->json(['message' => 'Invalid status or session not found'], 400);
     }
 
-    /**
-     * Complete a deliberation session
-     * POST /api/deliberations/{id}/complete
-     */
-    public function complete(DeliberationSession $deliberation_session)
-    {
-        if ($deliberation_session->status !== DeliberationSession::STATUS_IN_PROGRESS) {
-            return $this->error('Session must be in IN_PROGRESS status', Response::HTTP_BAD_REQUEST);
-        }
-
-        try {
-            $this->deliberationService->completeDeliberation($deliberation_session);
-
-            return response()->json([
-                'message' => 'Deliberation session completed successfully',
-                'session' => $deliberation_session->fresh(),
-            ]);
-        } catch (\Exception $e) {
-            return $this->error($e->getMessage(), Response::HTTP_BAD_REQUEST);
-        }
-    }
-
-    /**
-     * Get eligible students for deliberation
-     * GET /api/deliberations/{id}/students
-     */
-    public function getStudents(DeliberationSession $deliberation_session)
-    {
-        $students = $this->deliberationService->fetchEligibleStudents($deliberation_session);
-
-        return response()->json($students);
-    }
 
     /**
      * Generate minutes for a deliberation session
      * GET /api/deliberations/{id}/minutes
      */
-    public function generateMinutes(DeliberationSession $deliberation_session)
+    public function generateMinutes($id)
     {
+        $deliberation_session = $this->service->getById($id);
         if ($deliberation_session->status !== DeliberationSession::STATUS_COMPLETED) {
             return $this->error('Session must be COMPLETED to generate minutes', Response::HTTP_BAD_REQUEST);
         }

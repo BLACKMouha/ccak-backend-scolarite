@@ -19,8 +19,27 @@ class DeliberationSessionResource extends JsonResource
             'session_date' => $this->session_date?->toDateString(),
             'status' => $this->status,
             'presided_by' => $this->presided_by,
-            'president' => $this->whenLoaded('president'),
-            'jury_members' => $this->jury_members ?? [],
+
+            'president' => $this->when($this->relationLoaded('president') && $this->president, function () {
+                return [
+                    'id' => $this->president->id,
+                    'full_name' => $this->president->full_name,
+                    'rank' => $this->president->rank,
+                ];
+            }),
+
+            'jury_members' => $this->when($this->relationLoaded('juryMembers'), function () {
+                return $this->juryMembers->map(fn ($m) => [
+                    'id' => $m->id,
+                    'full_name' => $m->full_name,
+                    'rank' => $m->rank,
+                ]);
+            }),
+
+            'academicProgram' => $this->whenLoaded('academicProgram'),
+            'academicYear' => $this->whenLoaded('academicYear'),
+            'results' => $this->whenLoaded('results'),
+
             'results' => $this->whenLoaded('results'),
             'created_at' => optional($this->created_at)->toISOString(),
             'updated_at' => optional($this->updated_at)->toISOString(),

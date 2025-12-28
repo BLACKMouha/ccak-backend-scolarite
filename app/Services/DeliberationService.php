@@ -2,18 +2,33 @@
 
 namespace App\Services;
 
+use App\Http\Resources\Academic\DeliberationSessionResource;
 use App\Models\DeliberationResult;
 use App\Models\DeliberationSession;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
+use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\QueryBuilder;
 
 class DeliberationService
 {
-    public function getAll()
+    public function getAll(Request $request)
     {
-        return DeliberationSession::with(['academicProgram', 'academicYear', 'president', 'results'])
-            ->orderBy('session_date', 'desc')
-            ->get();
+        $sessions = QueryBuilder::for(DeliberationSession::query())
+            ->with(['academicProgram', 'academicYear', 'president', 'juryMembers'])
+            ->allowedIncludes(['academicProgram', 'academicYear', 'president', 'juryMembers', 'results'])
+            ->allowedFilters([
+            AllowedFilter::exact('academic_program_id'),
+            AllowedFilter::exact('academic_year_id'),
+            AllowedFilter::exact('status'),
+            AllowedFilter::exact('semester'),
+            ])
+            ->allowedSorts(['session_date', 'created_at'])
+            ->defaultSort('-session_date')
+            ->paginate($request->input('per_page', 15));
+
+        return DeliberationSessionResource::collection($sessions);
     }
 
     public function getById($id)

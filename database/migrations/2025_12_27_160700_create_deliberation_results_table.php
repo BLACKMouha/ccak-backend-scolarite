@@ -26,6 +26,11 @@ return new class extends Migration
                 ->on('deliberation_sessions')
                 ->cascadeOnDelete();
 
+            $table->foreign('student_id')
+                ->references('id')
+                ->on('students')
+                ->cascadeOnDelete();
+
             $table->unique(['deliberation_session_id', 'student_id']);
             $table->index('decision');
             $table->index('is_with_honors');

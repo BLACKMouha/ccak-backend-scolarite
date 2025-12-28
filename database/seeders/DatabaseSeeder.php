@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
             // Seeders de délibération
             DeliberationSessionSeeder::class,
             DeliberationResultSeeder::class,
+            FacultyMemberSeeder::class,
+            StudentSeeder::class,
         ]);
 
         $admin = User::factory()->create([

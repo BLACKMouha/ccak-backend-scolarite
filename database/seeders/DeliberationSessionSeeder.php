@@ -5,47 +5,80 @@ namespace Database\Seeders;
 use App\Models\AcademicProgram;
 use App\Models\AcademicYear;
 use App\Models\DeliberationSession;
-use App\Models\User;
+use App\Models\FacultyMember;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class DeliberationSessionSeeder extends Seeder
 {
     public function run(): void
     {
-        // Récupérer des données existantes ou créer des fakes
-        $academicPrograms = AcademicProgram::all();
-        $academicYears = AcademicYear::all();
-        $users = User::all();
+        // 1) Facultés (président + jury)
+        $faculty = collect([
+            [
+                'id' => '27643d9d-7f7a-47d7-8e1d-2cd258de54ae',
+                'staff_number' => 'FM-001',
+                'full_name' => 'Prof. Alice Dupont',
+                'rank' => 'PROFESSEUR',
+                'contract_type' => 'PERMANENT',
+                'hire_date' => '2017-12-28',
+            ],
+            [
+                'id' => '90cb14ef-f22c-49d5-bd37-bb3c492b415c',
+                'staff_number' => 'FM-002',
+                'full_name' => 'Dr. Bob Martin',
+                'rank' => 'MAITRE_CONF',
+                'contract_type' => 'PERMANENT',
+                'hire_date' => '2020-12-28',
+            ],
+            [
+                'id' => '64b18032-d3b2-4d91-b2e4-bd779059e49a',
+                'staff_number' => 'FM-003',
+                'full_name' => 'Mme. Claire Leroy',
+                'rank' => 'ASSISTANT',
+                'contract_type' => 'TEMPORARY',
+                'hire_date' => '2023-12-28',
+            ],
+        ])->map(function ($row) {
+            return FacultyMember::firstOrCreate(
+                ['staff_number' => $row['staff_number']],
+                array_merge($row, [
+                    'user_id' => null,
+                    'phone' => null,
+                    'address' => null,
+                    'department_id' => null,
+                    'is_active' => true,
+                ])
+            );
+        });
 
-        if ($academicPrograms->isEmpty() || $academicYears->isEmpty() || $users->isEmpty()) {
-            $this->command->warn('⚠️  Academic Programs, Academic Years, or Users not found. Creating sample data...');
+        // 2) Academic Program & Year (existants ou créés à la volée)
+        $programId = AcademicProgram::query()->value('id')
+            ?? AcademicProgram::factory()->create()->id;
 
-            // Créer des données de test si nécessaire
-            if ($academicPrograms->isEmpty()) {
-                $academicPrograms = AcademicProgram::factory()->count(3)->create();
-            }
-            if ($academicYears->isEmpty()) {
-                $academicYears = AcademicYear::factory()->count(2)->create();
-            }
-            if ($users->isEmpty()) {
-                $users = User::factory()->count(5)->create();
-            }
-        }
+        $yearId = AcademicYear::query()->value('id')
+            ?? AcademicYear::factory()->create()->id;
 
-        // Créer 20 sessions de délibération
-        DeliberationSession::factory()
-            ->count(20)
-            ->create([
-                'academic_program_id' => fn() => $academicPrograms->random()->id,
-                'academic_year_id' => fn() => $academicYears->random()->id,
-                'presided_by' => fn() => $users->random()->id,
-            ])
-            ->each(function ($session) use ($users) {
-                // Ajouter des membres de jury aléatoires (2-5 membres)
-                $juryMembers = $users->random(rand(2, 5))->pluck('id')->toArray();
-                $session->update(['jury_members' => $juryMembers]);
-            });
+        // 3) Créer la session de délibération
+        $session = DeliberationSession::query()->firstOrCreate(
+            ['id' => (string) Str::uuid()],
+            [
+                'academic_program_id' => $programId,
+                'academic_year_id' => $yearId,
+                'semester' => 1,
+                'session_name' => 'Session de délibération S1',
+                'session_date' => now()->toDateString(),
+                'status' => DeliberationSession::STATUS_SCHEDULED,
+                'presided_by' => '27643d9d-7f7a-47d7-8e1d-2cd258de54ae', // Prof. Alice Dupont
+                'jury_members' => null, // conservé si la colonne existe, mais non utilisée pour la relation
+            ]
+        );
 
-        $this->command->info('✅ Created 20 DeliberationSessions with jury members');
+        // 4) Lier les membres du jury via le pivot
+        $session->juryMembers()->sync([
+            '90cb14ef-f22c-49d5-bd37-bb3c492b415c', // Dr. Bob Martin
+            '64b18032-d3b2-4d91-b2e4-bd779059e49a', // Mme. Claire Leroy
+        ]);
     }
 }

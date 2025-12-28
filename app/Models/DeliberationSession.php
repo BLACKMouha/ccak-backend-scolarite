@@ -84,7 +84,17 @@ class DeliberationSession extends Model
 
     public function president()
     {
-        return $this->belongsTo(Faculty::class, 'presided_by');
+        return $this->belongsTo(FacultyMember::class, 'presided_by');
+    }
+
+    public function juryMembers()
+    {
+        return $this->belongsToMany(
+            FacultyMember::class,
+            'deliberation_session_jury',
+            'deliberation_session_id',
+            'faculty_member_id'
+        );
     }
 
     public function results()

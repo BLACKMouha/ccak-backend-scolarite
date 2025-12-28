@@ -12,6 +12,10 @@ class DeliberationResultController extends Controller
         protected DeliberationResultService $service)
     {
         // Add middleware here if needed, specially for permissions
+        $this->middleware('permission:deliberation_results.view')->only(['index', 'show']);
+        $this->middleware('permission:deliberation_results.create')->only('store');
+        $this->middleware('permission:deliberation_results.update')->only('update');
+        $this->middleware('permission:deliberation_results.delete')->only('destroy');
     }
 
     public function index()
