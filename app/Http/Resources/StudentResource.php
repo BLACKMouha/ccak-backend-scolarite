@@ -10,6 +10,8 @@ class StudentResource extends JsonResource
     public function toArray($request): array
     {
         return [
+            'student_number' => $this->student_number,
+            'full_name' => $this->full_name,
             'user_id' => $this->user_id,
             'student_number' => $this->student_number,
             'full_name' => $this->full_name,

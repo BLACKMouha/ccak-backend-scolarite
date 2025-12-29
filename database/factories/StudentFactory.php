@@ -14,10 +14,11 @@ class StudentFactory extends Factory
     public function definition(): array
     {
 
+
         return [
             'id' => $this->faker->uuid(),
             'user_id' => User::factory(),
-            'student_number' => $this->faker->sentence(),
+            'student_number' => $this->faker->unique()->numerify('STU#######'),
             'full_name' => $this->faker->name(),
             'date_of_birth' => $this->faker->date('Y-m-d'),
             'place_of_birth' => $this->faker->city(),

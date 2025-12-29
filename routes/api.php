@@ -39,6 +39,10 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('academic-programs', AcademicProgramController::class);
     Route::apiResource('course-units', CourseUnitController::class);
     Route::apiResource('courses', CourseController::class);
+   Route::apiResource('courses', \App\Http\Controllers\Academic\CourseController::class);
+    Route::get('courses/{course}/grades', [\App\Http\Controllers\Academic\CourseController::class, 'grades']);
+    Route::apiResource('course-enrollments', \App\Http\Controllers\CourseEnrollmentController::class);
+
     Route::apiResource('generated-documents', GeneratedDocumentController::class);
     Route::get('/generated-documents/verify/{documentNumber}', [GeneratedDocumentController::class, 'verify']);
     Route::apiResource('documents', DocumentController::class);
@@ -76,6 +80,21 @@ Route::middleware('auth:api')->group(function () {
     Route::put('roles/{role}', [RoleController::class, 'update']);
     Route::put('users/{user}/roles', [UserRoleController::class, 'update']);
 
+    // Grade management endpoints
+    Route::apiResource('grades', \App\Http\Controllers\GradeController::class);
+    Route::post('grades/{grade}/submit', [\App\Http\Controllers\GradeController::class, 'submit']);
+    Route::post('grades/{grade}/validate', [\App\Http\Controllers\GradeController::class, 'validateGrade']);
+    Route::post('grades/publish', [\App\Http\Controllers\GradeController::class, 'publish']);
+
+    // Student management endpoints
+    Route::apiResource('students', \App\Http\Controllers\StudentController::class);
+    Route::get('students/{student}/grades', [\App\Http\Controllers\StudentController::class, 'grades']);
+
+    // Semester results management endpoints
+    Route::apiResource('semester-results', \App\Http\Controllers\SemesterResultController::class);
+    Route::post('semester-results/calculate', [\App\Http\Controllers\SemesterResultController::class, 'calculate']);
+    Route::get('semester-results/statistics', [\App\Http\Controllers\SemesterResultController::class, 'statistics']);
+    Route::post('semester-results/recalculate/{student}', [\App\Http\Controllers\SemesterResultController::class, 'recalculateStudent']);
     // Enrollments
     Route::get('/students/{id}/enrollments', [EnrollmentController::class, 'getByStudent']);
 
@@ -91,3 +110,4 @@ Route::middleware('auth:api')->group(function () {
     Route::get('programs/{id}/available-courses', [CourseEnrollmentController::class, 'getAvailableCoursesByProgram']);
 
 });
+

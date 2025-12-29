@@ -1,7 +1,7 @@
 {
     "info": {
-        "name": "CourseEnrollment API",
-        "_postman_id": "aeb892c6-5b48-412b-a7c3-19c3ade55ac4",
+        "name": "SemesterResult API",
+        "_postman_id": "ca48057d-61b9-4222-94b4-33698d007096",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "item": [
@@ -9,7 +9,7 @@
             "name": "Index",
             "request": {
                 "method": "GET",
-                "url": "{{base_url}}/api/course-enrollments"
+                "url": "{{base_url}}/api/semester-results"
             }
         },
         {
@@ -24,16 +24,16 @@
                 ],
                 "body": {
                     "mode": "raw",
-                    "raw": "{\n    \"enrollment_id\": 1,\n    \"course_id\": 1,\n    \"academic_year_id\": 1,\n    \"semester\": 1,\n    \"status\": \"exemple\",\n    \"enrollment_date\": \"2025-01-01\",\n    \"drop_date\": \"2025-01-01\"\n}"
+                    "raw": "{\n    \"student_id\": 1,\n    \"academic_year_id\": 1,\n    \"semester\": 1,\n    \"total_credits_enrolled\": 10.5,\n    \"total_credits_earned\": 10.5,\n    \"semester_average\": 10.5,\n    \"semester_gpa\": 10.5,\n    \"decision\": \"exemple\",\n    \"calculated_by\": 1,\n    \"calculated_at\": \"2025-01-01 12:00:00\"\n}"
                 },
-                "url": "{{base_url}}/api/course-enrollments"
+                "url": "{{base_url}}/api/semester-results"
             }
         },
         {
             "name": "Show",
             "request": {
                 "method": "GET",
-                "url": "{{base_url}}/api/course-enrollments/1"
+                "url": "{{base_url}}/api/semester-results/1"
             }
         },
         {
@@ -48,16 +48,16 @@
                 ],
                 "body": {
                     "mode": "raw",
-                    "raw": "{\n    \"enrollment_id\": 1,\n    \"course_id\": 1,\n    \"academic_year_id\": 1,\n    \"semester\": 1,\n    \"status\": \"exemple\",\n    \"enrollment_date\": \"2025-01-01\",\n    \"drop_date\": \"2025-01-01\"\n}"
+                    "raw": "{\n    \"student_id\": 1,\n    \"academic_year_id\": 1,\n    \"semester\": 1,\n    \"total_credits_enrolled\": 10.5,\n    \"total_credits_earned\": 10.5,\n    \"semester_average\": 10.5,\n    \"semester_gpa\": 10.5,\n    \"decision\": \"exemple\",\n    \"calculated_by\": 1,\n    \"calculated_at\": \"2025-01-01 12:00:00\"\n}"
                 },
-                "url": "{{base_url}}/api/course-enrollments/1"
+                "url": "{{base_url}}/api/semester-results/1"
             }
         },
         {
             "name": "Destroy",
             "request": {
                 "method": "DELETE",
-                "url": "{{base_url}}/api/course-enrollments/1"
+                "url": "{{base_url}}/api/semester-results/1"
             }
         }
     ],

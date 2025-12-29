@@ -23,9 +23,18 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $admin->assignRole('ADMIN');
-        $this->call(UserSeeder::class);
-        $this->call(StudentSeeder::class);
-        $this->call(DocumentSeeder::class);
-        $this->call(GeneratedDocumentSeeder::class);
+
+        $this->call([
+            AcademicYearSeeder::class,
+            StudentSeeder::class,
+            CourseSeeder::class,
+            CourseEnrollmentSeeder::class,
+            GradeSeeder::class,
+            SemesterResultSeeder::class,
+          UserSeeder::class,
+          DocumentSeeder::class,
+          GeneratedDocumentSeeder::class
+        ]);
+       
     }
 }
