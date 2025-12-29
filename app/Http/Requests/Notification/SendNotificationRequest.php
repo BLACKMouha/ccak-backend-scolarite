@@ -2,27 +2,28 @@
 
 namespace App\Http\Requests\Notification;
 
+use App\Models\Notification;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class SendNotificationRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        return $this->user()->isAdmin();
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'recipient_ids' => ['required', 'array'],
+            'recipient_ids.*' => ['required', 'integer', 'exists:users,id'],
+            'title' => ['required', 'string', 'max:255'],
+            'message' => ['required', 'string'],
+            'type' => ['required', 'string', Rule::in(Notification::getTypes())],
+            'channels' => ['nullable', 'array'],
+            'channels.*' => ['string', Rule::in(Notification::getChannels())],
+            'metadata' => ['nullable', 'array'],
         ];
     }
 }

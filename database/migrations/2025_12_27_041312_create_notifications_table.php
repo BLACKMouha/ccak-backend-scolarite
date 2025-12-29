@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('notifications', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('user_id')->constrained()->onDelete('cascade');
             $table->string('type'); // 'grade_published', 'enrollment_confirmed', 'document_ready', etc.
             $table->string('channel')->default('in_app'); // 'in_app', 'email', 'sms'
             $table->string('title');

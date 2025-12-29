@@ -1,9 +1,10 @@
 <?php
+// app/Mail/NotificationMail.php
 
 namespace App\Mail;
 
+use App\Models\Notification;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -13,41 +14,35 @@ class NotificationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    /**
-     * Create a new message instance.
-     */
-    public function __construct()
-    {
-        //
-    }
+    public function __construct(
+        public Notification $notification
+    ) {}
 
-    /**
-     * Get the message envelope.
-     */
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Notification Mail',
+            subject: $this->notification->title,
         );
     }
 
-    /**
-     * Get the message content definition.
-     */
     public function content(): Content
     {
-        return new Content(
-            view: 'view.name',
-        );
-    }
+        $view = match ($this->notification->type) {
+            Notification::TYPE_WELCOME => 'emails.notifications.welcome',
+            Notification::TYPE_PASSWORD_RESET => 'emails.notifications.password-reset',
+            Notification::TYPE_GRADE_PUBLISHED => 'emails.notifications.grade-published',
+            Notification::TYPE_ENROLLMENT_CONFIRMED => 'emails.notifications.enrollment-confirmed',
+            Notification::TYPE_DOCUMENT_READY => 'emails.notifications.document-ready',
+            default => 'emails.notifications.generic',
+        };
 
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
-    public function attachments(): array
-    {
-        return [];
+        return new Content(
+            view: $view,
+            with: [
+                'notification' => $this->notification,
+                'user' => $this->notification->user,
+                'metadata' => $this->notification->metadata,
+            ],
+        );
     }
 }

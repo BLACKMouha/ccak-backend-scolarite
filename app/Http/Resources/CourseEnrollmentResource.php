@@ -10,6 +10,8 @@ class CourseEnrollmentResource extends JsonResource
     public function toArray($request): array
     {
         return [
+            'student_id' => $this->student_id,
+            'course_id' => $this->course_id,
             'enrollment_id' => $this->enrollment_id,
             'course_id' => $this->course_id,
             'academic_year_id' => $this->academic_year_id,

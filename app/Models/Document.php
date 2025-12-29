@@ -2,126 +2,158 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use App\Enums\DocumentStatus;
+use App\Enums\DocumentType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Storage;
+
 
 class Document extends Model
 {
     use HasFactory, HasUuids;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
+    protected $table = 'documents';
+
     protected $fillable = [
         'student_id',
+        'reviewed_by',
         'type',
+        'status',
         'file_path',
         'file_name',
-        'status',
-        'reviewed_by',
         'notes',
         'uploaded_at',
         'reviewed_at',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'uploaded_at' => 'datetime',
-            'reviewed_at' => 'datetime',
-        ];
-    }
+    protected $casts = [
+        'student_id' => 'string',
+        'reviewed_by' => 'string',
+        'type' => DocumentType::class,
+        'status' => DocumentStatus::class,
+        'file_path' => 'string',
+        'file_name' => 'string',
+        'notes' => 'string',
+        'uploaded_at' => 'datetime',
+        'reviewed_at' => 'datetime',
+    ];
 
-    /**
-     * Get the student that owns the document.
-     */
+    protected $attributes = [
+        'status' => DocumentStatus::PENDING,
+    ];
+
     public function student()
     {
-        return $this->belongsTo(Student::class);
+        return $this->belongsTo(Student::class, 'student_id');
     }
 
-    /**
-     * Get the admin who reviewed the document.
-     */
     public function reviewer()
     {
-        return $this->belongsTo(Admin::class, 'reviewed_by');
+        return $this->belongsTo(User::class, 'reviewed_by');
     }
 
     /**
-     * Scope a query to only include pending documents.
+     * Accesseurs
+     */
+    protected function typeLabel(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->type?->label() ?? 'Inconnu'
+        );
+    }
+
+    protected function statusLabel(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->status?->label() ?? 'Inconnu'
+        );
+    }
+
+    protected function statusColor(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->status?->color() ?? 'secondary'
+        );
+    }
+
+    protected function isPending(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->status === DocumentStatus::PENDING
+        );
+    }
+
+    protected function isApproved(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->status === DocumentStatus::APPROVED
+        );
+    }
+
+    protected function isRejected(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->status === DocumentStatus::REJECTED
+        );
+    }
+
+    protected function fileSizeHuman(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if (!isset($this->metadata['size'])) {
+                    return 'N/A';
+                }
+
+                $size = $this->metadata['size'];
+                $units = ['B', 'KB', 'MB', 'GB'];
+
+                for ($i = 0; $size > 1024 && $i < count($units) - 1; $i++) {
+                    $size /= 1024;
+                }
+
+                return round($size, 2) . ' ' . $units[$i];
+            }
+        );
+    }
+
+    /**
+     * Scopes
      */
     public function scopePending($query)
     {
-        return $query->where('status', 'PENDING');
+        return $query->where('status', DocumentStatus::PENDING);
     }
 
-    /**
-     * Scope a query to only include approved documents.
-     */
     public function scopeApproved($query)
     {
-        return $query->where('status', 'APPROVED');
+        return $query->where('status', DocumentStatus::APPROVED);
     }
 
-    /**
-     * Scope a query to only include rejected documents.
-     */
     public function scopeRejected($query)
     {
-        return $query->where('status', 'REJECTED');
+        return $query->where('status', DocumentStatus::REJECTED);
     }
 
-    /**
-     * Scope a query by document type.
-     */
     public function scopeOfType($query, string $type)
     {
         return $query->where('type', $type);
     }
 
-    /**
-     * Get the full URL of the document.
-     */
-    public function getUrlAttribute(): string
+    public function scopeForStudent($query, string $studentId)
     {
-        return Storage::url($this->file_path);
+        return $query->where('student_id', $studentId);
     }
 
-    /**
-     * Check if document is pending.
-     */
-    public function isPending(): bool
+    public function scopeNeedsReview($query)
     {
-        return $this->status === 'PENDING';
+        return $query->where('status', DocumentStatus::PENDING)
+            ->whereNull('reviewed_at');
     }
-
-    /**
-     * Check if document is approved.
-     */
-    public function isApproved(): bool
-    {
-        return $this->status === 'APPROVED';
-    }
-
-    /**
-     * Check if document is rejected.
-     */
-    public function isRejected(): bool
-    {
-        return $this->status === 'REJECTED';
-    }
-
-    /**
+       /**
      * Approve the document.
      */
     public function approve(Admin $admin, ?string $notes = null): void
@@ -168,5 +200,4 @@ class Document extends Model
     public function getTypeLabelAttribute(): string
     {
         return self::typeLabels()[$this->type] ?? $this->type;
-    }
 }

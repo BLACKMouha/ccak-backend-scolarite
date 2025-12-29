@@ -1,0 +1,463 @@
+<?php
+declare(strict_types=1);
+
+namespace Tests\Unit;
+
+use App\Models\AcademicYear;
+use App\Models\Course;
+use App\Models\CourseEnrollment;
+use App\Models\Grade;
+use App\Models\Student;
+use App\Models\User;
+use App\Models\Enums\DecisionType;
+use App\Services\SemesterResultCalculationService;
+use App\Services\GradeCalculationService;
+use App\Repositories\SemesterResultRepository;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
+use Tests\TestCase;
+
+class SemesterResultCalculationServiceTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private SemesterResultCalculationService $service;
+    private GradeCalculationService $gradeService;
+    private SemesterResultRepository $repository;
+    private User $admin;
+    private Student $student;
+    private AcademicYear $academicYear;
+    private Course $course1;
+    private Course $course2;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Create roles
+        Role::create(['name' => 'ADMIN', 'guard_name' => 'api']);
+        Role::create(['name' => 'FACULTY', 'guard_name' => 'api']);
+
+        // Initialize services
+        $this->gradeService = new GradeCalculationService();
+        $this->repository = new SemesterResultRepository();
+        $this->service = new SemesterResultCalculationService($this->gradeService, $this->repository);
+
+        // Create test admin user
+        $this->admin = User::create([
+            'email' => 'admin@test.com',
+            'password' => 'password',
+            'keycloak_id' => 'admin-123',
+            'user_type' => 'admin',
+            'is_active' => true,
+        ]);
+        $this->admin->assignRole('ADMIN');
+
+        // Create test data
+        $this->student = Student::create([
+            'student_number' => 'STU001',
+            'full_name' => 'Test Student',
+        ]);
+
+        $this->academicYear = AcademicYear::create([
+            'name' => '2023-2024',
+        ]);
+
+        $this->course1 = Course::create([
+            'code' => 'CS101',
+            'name' => 'Introduction to Computer Science',
+            'credits' => 3,
+            'coefficient' => 2,
+            'is_active' => true,
+        ]);
+
+        $this->course2 = Course::create([
+            'code' => 'MATH101',
+            'name' => 'Mathematics',
+            'credits' => 4,
+            'coefficient' => 3,
+            'is_active' => true,
+        ]);
+    }
+
+    /** @test */
+    public function it_calculates_semester_results_successfully()
+    {
+        // Create course enrollments
+        $enrollment1 = CourseEnrollment::create([
+            'student_id' => $this->student->id,
+            'course_id' => $this->course1->id,
+        ]);
+
+        $enrollment2 = CourseEnrollment::create([
+            'student_id' => $this->student->id,
+            'course_id' => $this->course2->id,
+        ]);
+
+        // Create passing grades
+        Grade::create([
+            'course_enrollment_id' => $enrollment1->id,
+            'student_id' => $this->student->id,
+            'course_id' => $this->course1->id,
+            'type' => 'EXAM',
+            'score' => 15,
+            'max_score' => 20,
+            'weight' => 1.0,
+            'entered_by' => $this->admin->id,
+            'status' => 'PUBLISHED',
+        ]);
+
+        Grade::create([
+            'course_enrollment_id' => $enrollment2->id,
+            'student_id' => $this->student->id,
+            'course_id' => $this->course2->id,
+            'type' => 'EXAM',
+            'score' => 12,
+            'max_score' => 20,
+            'weight' => 1.0,
+            'entered_by' => $this->admin->id,
+            'status' => 'PUBLISHED',
+        ]);
+
+        $result = $this->service->calculateSemesterResults(
+            $this->academicYear->id,
+            1,
+            $this->admin
+        );
+
+        $this->assertTrue($result['success']);
+        $this->assertEquals(1, $result['data']['students_processed']);
+        $this->assertEquals(1, $result['data']['results_created']);
+        $this->assertEmpty($result['data']['errors']);
+
+        // Check that semester result was created
+        $semesterResult = \App\Models\SemesterResult::where('student_id', $this->student->id)
+            ->where('academic_year_id', $this->academicYear->id)
+            ->where('semester', 1)
+            ->first();
+
+        $this->assertNotNull($semesterResult);
+        $this->assertEquals(DecisionType::VALIDATED, $semesterResult->decision);
+        $this->assertEquals(5, $semesterResult->total_credits_enrolled); // 2 + 3
+        $this->assertEquals(5, $semesterResult->total_credits_earned);    // Both courses passed
+    }
+
+    /** @test */
+    public function it_calculates_student_result_with_compensation()
+    {
+        // Create course enrollments
+        $enrollment1 = CourseEnrollment::create([
+            'student_id' => $this->student->id,
+            'course_id' => $this->course1->id,
+        ]);
+
+        $enrollment2 = CourseEnrollment::create([
+            'student_id' => $this->student->id,
+            'course_id' => $this->course2->id,
+        ]);
+
+        // Create grades: one passing, one compensable
+        Grade::create([
+            'course_enrollment_id' => $enrollment1->id,
+            'student_id' => $this->student->id,
+            'course_id' => $this->course1->id,
+            'type' => 'EXAM',
+            'score' => 12,
+            'max_score' => 20,
+            'weight' => 1.0,
+            'entered_by' => $this->admin->id,
+            'status' => 'PUBLISHED',
+        ]);
+
+        Grade::create([
+            'course_enrollment_id' => $enrollment2->id,
+            'student_id' => $this->student->id,
+            'course_id' => $this->course2->id,
+            'type' => 'EXAM',
+            'score' => 9,
+            'max_score' => 20,
+            'weight' => 1.0,
+            'entered_by' => $this->admin->id,
+            'status' => 'PUBLISHED',
+        ]);
+
+        $result = $this->service->calculateStudentSemesterResult(
+            $this->student,
+            $this->academicYear->id,
+            1,
+            $this->admin
+        );
+
+        $this->assertNotNull($result);
+        $this->assertEquals(DecisionType::COMPENSATION, $result->decision);
+        $this->assertEquals(5, $result->total_credits_enrolled);
+        $this->assertEquals(5, $result->total_credits_earned); // Both courses credited through compensation
+    }
+
+    /** @test */
+    public function it_determines_failed_decision_correctly()
+    {
+        $enrollment1 = CourseEnrollment::create([
+            'student_id' => $this->student->id,
+            'course_id' => $this->course1->id,
+        ]);
+
+        $enrollment2 = CourseEnrollment::create([
+            'student_id' => $this->student->id,
+            'course_id' => $this->course2->id,
+        ]);
+
+        // Create failing grades
+        Grade::create([
+            'course_enrollment_id' => $enrollment1->id,
+            'student_id' => $this->student->id,
+            'course_id' => $this->course1->id,
+            'type' => 'EXAM',
+            'score' => 7,
+            'max_score' => 20,
+            'weight' => 1.0,
+            'entered_by' => $this->admin->id,
+            'status' => 'PUBLISHED',
+        ]);
+
+        Grade::create([
+            'course_enrollment_id' => $enrollment2->id,
+            'student_id' => $this->student->id,
+            'course_id' => $this->course2->id,
+            'type' => 'EXAM',
+            'score' => 6,
+            'max_score' => 20,
+            'weight' => 1.0,
+            'entered_by' => $this->admin->id,
+            'status' => 'PUBLISHED',
+        ]);
+
+        $result = $this->service->calculateStudentSemesterResult(
+            $this->student,
+            $this->academicYear->id,
+            1,
+            $this->admin
+        );
+
+        $this->assertNotNull($result);
+        $this->assertEquals(DecisionType::FAILED, $result->decision);
+        $this->assertEquals(5, $result->total_credits_enrolled);
+        $this->assertEquals(0, $result->total_credits_earned); // No credits earned
+    }
+
+    /** @test */
+    public function it_determines_resit_required_correctly()
+    {
+        $enrollment1 = CourseEnrollment::create([
+            'student_id' => $this->student->id,
+            'course_id' => $this->course1->id,
+        ]);
+
+        $enrollment2 = CourseEnrollment::create([
+            'student_id' => $this->student->id,
+            'course_id' => $this->course2->id,
+        ]);
+
+        // Create grades that lead to resit (failed but decent average)
+        Grade::create([
+            'course_enrollment_id' => $enrollment1->id,
+            'student_id' => $this->student->id,
+            'course_id' => $this->course1->id,
+            'type' => 'EXAM',
+            'score' => 10,
+            'max_score' => 20,
+            'weight' => 1.0,
+            'entered_by' => $this->admin->id,
+            'status' => 'PUBLISHED',
+        ]);
+
+        Grade::create([
+            'course_enrollment_id' => $enrollment2->id,
+            'student_id' => $this->student->id,
+            'course_id' => $this->course2->id,
+            'type' => 'EXAM',
+            'score' => 7,
+            'max_score' => 20,
+            'weight' => 1.0,
+            'entered_by' => $this->admin->id,
+            'status' => 'PUBLISHED',
+        ]);
+
+        $result = $this->service->calculateStudentSemesterResult(
+            $this->student,
+            $this->academicYear->id,
+            1,
+            $this->admin
+        );
+
+        $this->assertNotNull($result);
+        $this->assertEquals(DecisionType::RESIT_REQUIRED, $result->decision);
+    }
+
+    /** @test */
+    public function it_updates_existing_semester_result()
+    {
+        $enrollment = CourseEnrollment::create([
+            'student_id' => $this->student->id,
+            'course_id' => $this->course1->id,
+        ]);
+
+        Grade::create([
+            'course_enrollment_id' => $enrollment->id,
+            'student_id' => $this->student->id,
+            'course_id' => $this->course1->id,
+            'type' => 'EXAM',
+            'score' => 12,
+            'max_score' => 20,
+            'weight' => 1.0,
+            'entered_by' => $this->admin->id,
+            'status' => 'PUBLISHED',
+        ]);
+
+        // Create initial result
+        $initialResult = $this->service->calculateStudentSemesterResult(
+            $this->student,
+            $this->academicYear->id,
+            1,
+            $this->admin
+        );
+
+        $this->assertNotNull($initialResult);
+        $initialId = $initialResult->id;
+
+        // Recalculate (should update, not create new)
+        $updatedResult = $this->service->calculateStudentSemesterResult(
+            $this->student,
+            $this->academicYear->id,
+            1,
+            $this->admin
+        );
+
+        $this->assertEquals($initialId, $updatedResult->id);
+    }
+
+    /** @test */
+    public function it_calculates_semester_statistics_correctly()
+    {
+        // Create multiple students with different results
+        $student2 = Student::create([
+            'student_number' => 'STU002',
+            'full_name' => 'Test Student 2',
+        ]);
+
+        // Create semester results directly
+        \App\Models\SemesterResult::create([
+            'student_id' => $this->student->id,
+            'academic_year_id' => $this->academicYear->id,
+            'semester' => 1,
+            'total_credits_enrolled' => 5,
+            'total_credits_earned' => 5,
+            'semester_average' => 15.0,
+            'semester_gpa' => 3.3,
+            'decision' => DecisionType::VALIDATED,
+            'calculated_by' => $this->admin->id,
+            'calculated_at' => now(),
+        ]);
+
+        \App\Models\SemesterResult::create([
+            'student_id' => $student2->id,
+            'academic_year_id' => $this->academicYear->id,
+            'semester' => 1,
+            'total_credits_enrolled' => 5,
+            'total_credits_earned' => 3,
+            'semester_average' => 9.5,
+            'semester_gpa' => 2.0,
+            'decision' => DecisionType::COMPENSATION,
+            'calculated_by' => $this->admin->id,
+            'calculated_at' => now(),
+        ]);
+
+        $statistics = $this->service->getSemesterStatistics($this->academicYear->id, 1);
+
+        $this->assertEquals(2, $statistics['total_students']);
+        $this->assertEquals(1, $statistics['decisions']['VALIDATED']);
+        $this->assertEquals(1, $statistics['decisions']['COMPENSATION']);
+        $this->assertEquals(0, $statistics['decisions']['FAILED']);
+        $this->assertEquals(0, $statistics['decisions']['RESIT_REQUIRED']);
+        $this->assertEquals(100.0, $statistics['success_rate']); // Both passed
+        $this->assertEquals(2.65, $statistics['average_gpa']); // (3.3 + 2.0) / 2
+        $this->assertEquals(12.25, $statistics['average_semester_average']); // (15.0 + 9.5) / 2
+    }
+
+    /** @test */
+    public function it_handles_no_students_case()
+    {
+        $result = $this->service->calculateSemesterResults(
+            $this->academicYear->id,
+            1,
+            $this->admin
+        );
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContains('No students found', $result['message']);
+        $this->assertEquals(0, $result['data']['students_processed']);
+        $this->assertEquals(0, $result['data']['results_created']);
+    }
+
+    /** @test */
+    public function it_returns_empty_statistics_for_no_results()
+    {
+        $statistics = $this->service->getSemesterStatistics($this->academicYear->id, 1);
+
+        $this->assertEquals(0, $statistics['total_students']);
+        $this->assertEquals([], $statistics['decisions']);
+        $this->assertEquals(0, $statistics['average_gpa']);
+        $this->assertEquals(0, $statistics['average_semester_average']);
+    }
+
+    /** @test */
+    public function it_calculates_credits_earned_correctly_for_compensation()
+    {
+        // This tests the private method through public interface
+        $enrollment1 = CourseEnrollment::create([
+            'student_id' => $this->student->id,
+            'course_id' => $this->course1->id,
+        ]);
+
+        $enrollment2 = CourseEnrollment::create([
+            'student_id' => $this->student->id,
+            'course_id' => $this->course2->id,
+        ]);
+
+        // One passing, one compensable
+        Grade::create([
+            'course_enrollment_id' => $enrollment1->id,
+            'student_id' => $this->student->id,
+            'course_id' => $this->course1->id,
+            'type' => 'EXAM',
+            'score' => 15,
+            'max_score' => 20,
+            'weight' => 1.0,
+            'entered_by' => $this->admin->id,
+            'status' => 'PUBLISHED',
+        ]);
+
+        Grade::create([
+            'course_enrollment_id' => $enrollment2->id,
+            'student_id' => $this->student->id,
+            'course_id' => $this->course2->id,
+            'type' => 'EXAM',
+            'score' => 9,
+            'max_score' => 20,
+            'weight' => 1.0,
+            'entered_by' => $this->admin->id,
+            'status' => 'PUBLISHED',
+        ]);
+
+        $result = $this->service->calculateStudentSemesterResult(
+            $this->student,
+            $this->academicYear->id,
+            1,
+            $this->admin
+        );
+
+        // Both courses should award credits through compensation
+        $this->assertEquals(5, $result->total_credits_enrolled);
+        $this->assertEquals(5, $result->total_credits_earned);
+    }
+}

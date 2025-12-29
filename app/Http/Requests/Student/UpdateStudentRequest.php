@@ -1,8 +1,10 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Http\Requests\Student;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateStudentRequest extends FormRequest
 {
@@ -14,6 +16,8 @@ class UpdateStudentRequest extends FormRequest
     public function rules(): array
     {
         return [
+              'student_number' => ['sometimes','string','max:255', \Illuminate\Validation\Rule::unique('students', 'student_number')->ignore($id)],
+
             'full_name' => ['sometimes', 'required', 'string', 'max:255'],
             'gender' => ['sometimes', 'required', 'in:M,F'],
             'date_of_birth' => ['sometimes', 'required', 'date', 'before:today'],

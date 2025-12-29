@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Database\Factories;
 
@@ -33,28 +34,8 @@ class StudentFactory extends Factory
             'emergency_contact_name' => $this->faker->name(),
             'emergency_contact_phone' => $this->faker->phoneNumber(),
             'address' => $this->faker->address(),
-            'photo_url' => $this->faker->optional()->imageUrl(),
-            'status' => $this->faker->randomElement(['ACTIVE', 'SUSPENDED', 'GRADUATED', 'WITHDRAWN', 'EXPELLED']),
+            'photo_url' => $this->faker->imageUrl(),
+            'status' => $this->faker->randomElement(Student::getStatuses()),
         ];
-    }
-
-    /**
-     * Indicate that the student is active.
-     */
-    public function active(): static
-    {
-        return $this->state(fn(array $attributes) => [
-            'status' => 'ACTIVE',
-        ]);
-    }
-
-    /**
-     * Indicate that the student is graduated.
-     */
-    public function graduated(): static
-    {
-        return $this->state(fn(array $attributes) => [
-            'status' => 'GRADUATED',
-        ]);
     }
 }

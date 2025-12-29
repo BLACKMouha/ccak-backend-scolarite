@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -16,7 +17,6 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(PermissionSeeder::class);
-
         $admin = User::factory()->create([
             'email' => 'test@example.com',
             'user_type' => 'ADMIN',
@@ -24,6 +24,17 @@ class DatabaseSeeder extends Seeder
 
         $admin->assignRole('ADMIN');
 
-        $this->call(StudentSeeder::class);
+        $this->call([
+            AcademicYearSeeder::class,
+            StudentSeeder::class,
+            CourseSeeder::class,
+            CourseEnrollmentSeeder::class,
+            GradeSeeder::class,
+            SemesterResultSeeder::class,
+          UserSeeder::class,
+          DocumentSeeder::class,
+          GeneratedDocumentSeeder::class
+        ]);
+       
     }
 }
