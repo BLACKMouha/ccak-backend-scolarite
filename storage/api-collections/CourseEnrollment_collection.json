@@ -24,7 +24,7 @@
                 ],
                 "body": {
                     "mode": "raw",
-                    "raw": "{\n    \"student_id\": 1,\n    \"course_id\": 1\n}"
+                    "raw": "{\n    \"enrollment_id\": 1,\n    \"course_id\": 1,\n    \"academic_year_id\": 1,\n    \"semester\": 1,\n    \"status\": \"exemple\",\n    \"enrollment_date\": \"2025-01-01\",\n    \"drop_date\": \"2025-01-01\"\n}"
                 },
                 "url": "{{base_url}}/api/course-enrollments"
             }
@@ -48,7 +48,7 @@
                 ],
                 "body": {
                     "mode": "raw",
-                    "raw": "{\n    \"student_id\": 1,\n    \"course_id\": 1\n}"
+                    "raw": "{\n    \"enrollment_id\": 1,\n    \"course_id\": 1,\n    \"academic_year_id\": 1,\n    \"semester\": 1,\n    \"status\": \"exemple\",\n    \"enrollment_date\": \"2025-01-01\",\n    \"drop_date\": \"2025-01-01\"\n}"
                 },
                 "url": "{{base_url}}/api/course-enrollments/1"
             }

@@ -34,5 +34,6 @@ class CourseEnrollmentSeeder extends Seeder
         });
 
         $this->command->info('Course enrollments created successfully.');
+        CourseEnrollment::factory()->count(20)->create();
     }
 }

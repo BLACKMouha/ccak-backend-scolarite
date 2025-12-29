@@ -24,7 +24,7 @@
                 ],
                 "body": {
                     "mode": "raw",
-                    "raw": "{\n    \"student_number\": \"exemple\",\n    \"full_name\": \"exemple\"\n}"
+                    "raw": "{\n    \"user_id\": \"exemple\",\n    \"student_number\": \"exemple\",\n    \"full_name\": \"exemple\",\n    \"date_of_birth\": \"2025-01-01\",\n    \"place_of_birth\": \"exemple\",\n    \"nationality\": \"exemple\",\n    \"phone\": \"exemple\",\n    \"emergency_contact_name\": \"exemple\",\n    \"emergency_contact_phone\": \"exemple\",\n    \"address\": \"exemple\",\n    \"photo_url\": \"exemple\",\n    \"status\": \"exemple\"\n}"
                 },
                 "url": "{{base_url}}/api/students"
             }
@@ -48,7 +48,7 @@
                 ],
                 "body": {
                     "mode": "raw",
-                    "raw": "{\n    \"student_number\": \"exemple\",\n    \"full_name\": \"exemple\"\n}"
+                    "raw": "{\n    \"user_id\": \"exemple\",\n    \"student_number\": \"exemple\",\n    \"full_name\": \"exemple\",\n    \"date_of_birth\": \"2025-01-01\",\n    \"place_of_birth\": \"exemple\",\n    \"nationality\": \"exemple\",\n    \"phone\": \"exemple\",\n    \"emergency_contact_name\": \"exemple\",\n    \"emergency_contact_phone\": \"exemple\",\n    \"address\": \"exemple\",\n    \"photo_url\": \"exemple\",\n    \"status\": \"exemple\"\n}"
                 },
                 "url": "{{base_url}}/api/students/1"
             }

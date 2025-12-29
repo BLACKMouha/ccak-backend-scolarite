@@ -19,6 +19,18 @@ class UpdateStudentRequest extends FormRequest
         return [
             'student_number' => ['sometimes','string','max:255', \Illuminate\Validation\Rule::unique('students', 'student_number')->ignore($id)],
             'full_name' => ['sometimes','string','max:255', ],
+            'user_id' => ['sometimes','string', \Illuminate\Validation\Rule::unique('students', 'user_id')->ignore($id)],
+            'student_number' => ['sometimes','string', \Illuminate\Validation\Rule::unique('students', 'student_number')->ignore($id)],
+            'full_name' => ['sometimes','string', ],
+            'date_of_birth' => ['nullable','date', ],
+            'place_of_birth' => ['nullable','string', ],
+            'nationality' => ['nullable','string', ],
+            'phone' => ['nullable','string', ],
+            'emergency_contact_name' => ['nullable','string', ],
+            'emergency_contact_phone' => ['nullable','string', ],
+            'address' => ['nullable','string', ],
+            'photo_url' => ['nullable','string', ],
+            'status' => ['sometimes','string', ],
         ];
     }
 }

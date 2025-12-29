@@ -15,6 +15,13 @@ class CourseEnrollmentFactory extends Factory
         return [
             'student_id' => fn() => \App\Models\Student::factory(),
             'course_id' => fn() => \App\Models\Course::factory(),
+            'enrollment_id' => fn() => \App\Models\Enrollment::factory(),
+            'course_id' => fn() => \App\Models\Course::factory(),
+            'academic_year_id' => fn() => \App\Models\AcademicYear::factory(),
+            'semester' => $this->faker->numberBetween(1, 9999),
+            'status' => $this->faker->sentence(),
+            'enrollment_date' => $this->faker->date('Y-m-d'),
+            'drop_date' => $this->faker->date('Y-m-d'),
         ];
     }
 }

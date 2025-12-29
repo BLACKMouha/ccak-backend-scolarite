@@ -10,6 +10,7 @@ use Dedoc\Scramble\Support\Generator\SecurityScheme;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use App\Observers\UserObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -50,5 +51,6 @@ class AppServiceProvider extends ServiceProvider
                 || $user->can('permissions.view')
                 || $user->can('roles.view');
         });
+         User::observe(UserObserver::class);
     }
 }
