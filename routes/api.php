@@ -1,5 +1,12 @@
 <?php
 
+use App\Http\Controllers\Academic\AcademicProgramController;
+use App\Http\Controllers\Academic\CourseController;
+use App\Http\Controllers\Academic\CourseUnitController;
+use App\Http\Controllers\Academic\DepartmentController;
+use App\Http\Controllers\Academic\FacultyController;
+use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\GeneratedDocumentController;
 use App\Http\Controllers\Academic\AcademicYearController;
 use App\Http\Controllers\Academic\CourseEnrollmentController;
 use App\Http\Controllers\Academic\EnrollmentController;
@@ -29,7 +36,16 @@ Route::middleware('auth:api')->group(function () {
         ]);
     });
 
-    // Notifications
+    Route::apiResource('faculties', FacultyController::class);
+    Route::apiResource('departments', DepartmentController::class);
+    Route::apiResource('academic-programs', AcademicProgramController::class);
+    Route::apiResource('course-units', CourseUnitController::class);
+    Route::apiResource('courses', CourseController::class);
+   Route::apiResource('courses', \App\Http\Controllers\Academic\CourseController::class);
+    Route::get('courses/{course}/grades', [\App\Http\Controllers\Academic\CourseController::class, 'grades']);
+    Route::apiResource('course-enrollments', \App\Http\Controllers\CourseEnrollmentController::class);
+
+   // Notifications
     Route::prefix('notifications')->group(function () {
         Route::get('/', [NotificationController::class, 'index']); // NOT-008
         Route::post('/', [NotificationController::class, 'send'])->middleware('role:ADMIN'); // NOT-007
@@ -49,21 +65,59 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/{id}/dismiss', [AnnouncementController::class, 'dismiss']);
         Route::post('/{id}/publish', [AnnouncementController::class, 'publish'])->middleware('role:ADMIN');
     });
+  
+    Route::apiResource('generated-documents', GeneratedDocumentController::class);
+    Route::get('/generated-documents/verify/{documentNumber}', [GeneratedDocumentController::class, 'verify']);
+    Route::apiResource('documents', DocumentController::class);
+    Route::prefix('documents')->group(function () {
+        // Routes pour les rapports et statistiques
+        Route::get('/report', [DocumentController::class, 'report']);
+        Route::get('/check-status', [DocumentController::class, 'checkStatus']);
+        Route::get('/check-status/{studentId}', [DocumentController::class, 'checkStatus']);
 
-    Route::apiResource('faculties', \App\Http\Controllers\Academic\FacultyController::class);
-    Route::apiResource('departments', \App\Http\Controllers\Academic\DepartmentController::class);
-    Route::apiResource('academic-programs', \App\Http\Controllers\Academic\AcademicProgramController::class);
-    Route::apiResource('course-units', \App\Http\Controllers\Academic\CourseUnitController::class);
-    Route::apiResource('courses', \App\Http\Controllers\Academic\CourseController::class);
-    Route::apiResource('academic-years', \App\Http\Controllers\Academic\AcademicYearController::class);
-    Route::apiResource('enrollments', \App\Http\Controllers\Academic\EnrollmentController::class);
-    Route::apiResource('course-enrollments', \App\Http\Controllers\Academic\CourseEnrollmentController::class);
+        // Routes pour les documents en attente
+        Route::get('/pending', [DocumentController::class, 'pending']);
+
+        // Routes pour les documents d'un étudiant spécifique
+        Route::get('/student/{studentId}', [DocumentController::class, 'studentDocuments'])
+            ->name('documents.student');
+
+        // Routes spécifiques à un document (complémentaires aux routes apiResource)
+        Route::prefix('{document}')->group(function () {
+            // Téléchargement
+            Route::get('/download', [DocumentController::class, 'download'])
+                ->name('documents.download');
+            Route::get('/download-file', [DocumentController::class, 'downloadFile'])
+                ->name('documents.download.file');
+
+            // Review (approbation/rejet)
+            Route::post('/approve', [DocumentController::class, 'approve'])
+                ->name('documents.approve');
+            Route::post('/reject', [DocumentController::class, 'reject'])
+                ->name('documents.reject');
+        });
+    });
 
     Route::get('roles', [RoleController::class, 'index']);
     Route::post('roles', [RoleController::class, 'store']);
     Route::put('roles/{role}', [RoleController::class, 'update']);
     Route::put('users/{user}/roles', [UserRoleController::class, 'update']);
 
+    // Grade management endpoints
+    Route::apiResource('grades', \App\Http\Controllers\GradeController::class);
+    Route::post('grades/{grade}/submit', [\App\Http\Controllers\GradeController::class, 'submit']);
+    Route::post('grades/{grade}/validate', [\App\Http\Controllers\GradeController::class, 'validateGrade']);
+    Route::post('grades/publish', [\App\Http\Controllers\GradeController::class, 'publish']);
+
+    // Student management endpoints
+    Route::apiResource('students', \App\Http\Controllers\StudentController::class);
+    Route::get('students/{student}/grades', [\App\Http\Controllers\StudentController::class, 'grades']);
+
+    // Semester results management endpoints
+    Route::apiResource('semester-results', \App\Http\Controllers\SemesterResultController::class);
+    Route::post('semester-results/calculate', [\App\Http\Controllers\SemesterResultController::class, 'calculate']);
+    Route::get('semester-results/statistics', [\App\Http\Controllers\SemesterResultController::class, 'statistics']);
+    Route::post('semester-results/recalculate/{student}', [\App\Http\Controllers\SemesterResultController::class, 'recalculateStudent']);
     // Enrollments
     Route::get('/students/{id}/enrollments', [EnrollmentController::class, 'getByStudent']);
 
@@ -79,3 +133,4 @@ Route::middleware('auth:api')->group(function () {
     Route::get('programs/{id}/available-courses', [CourseEnrollmentController::class, 'getAvailableCoursesByProgram']);
 
 });
+

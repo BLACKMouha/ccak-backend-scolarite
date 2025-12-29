@@ -13,6 +13,8 @@ class CourseEnrollmentFactory extends Factory
     public function definition(): array
     {
         return [
+            'student_id' => fn() => \App\Models\Student::factory(),
+            'course_id' => fn() => \App\Models\Course::factory(),
             'enrollment_id' => fn() => \App\Models\Enrollment::factory(),
             'course_id' => fn() => \App\Models\Course::factory(),
             'academic_year_id' => fn() => \App\Models\AcademicYear::factory(),

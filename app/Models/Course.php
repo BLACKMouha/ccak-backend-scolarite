@@ -51,6 +51,19 @@ class Course extends Model
         return is_array($value) ? $value : (json_decode($value, true) ?: []);
     }
 
+    public function enrollments()
+    {
+        return $this->hasMany(\App\Models\CourseEnrollment::class, 'course_id');
+    }
+
+    public function grades()
+    {
+        return $this->hasMany(\App\Models\Grade::class, 'course_id');
+    }
+
+    public function students()
+    {
+        return $this->belongsToMany(\App\Models\Student::class, 'course_enrollments', 'course_id', 'student_id');
     /**
      * Handle prerequisites for audit
      */
