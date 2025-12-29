@@ -2,8 +2,15 @@
 
 namespace App\Providers;
 
+use App\Models\Admin;
+use App\Models\Document;
+use App\Models\Guardian;
+use App\Models\Student;
 use App\Models\User;
+use App\Policies\DocumentPolicy;
+use App\Policies\GuardianPolicy;
 use App\Policies\RolePolicy;
+use App\Policies\StudentPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
@@ -12,7 +19,10 @@ use Spatie\Permission\Models\Role;
 class AuthServiceProvider extends ServiceProvider
 {
     protected $policies = [
+        Document::class => DocumentPolicy::class,
+        Guardian::class => GuardianPolicy::class,
         Role::class => RolePolicy::class,
+        Student::class => StudentPolicy::class,
         User::class => UserPolicy::class,
     ];
 

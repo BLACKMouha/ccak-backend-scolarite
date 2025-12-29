@@ -1,35 +1,41 @@
 <?php
+declare(strict_types=1);
 
 namespace Database\Factories;
 
 use App\Models\Student;
 use App\Models\User;
-use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Student>
+ */
 class StudentFactory extends Factory
 {
-    protected $model = Student::class;
-
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
     public function definition(): array
     {
+        static $sequence = 1;
+        $year = date('Y');
+
         return [
-            'id' => (string) Str::uuid(),
-            'student_number' => 'STU' . fake()->unique()->numberBetween(1000, 9999),
-            'full_name' => fake()->name(),
+            'user_id' => User::factory(),
+            'student_number' => "UCAK{$year}" . str_pad($sequence++, 3, '0', STR_PAD_LEFT),
+            'full_name' => $this->faker->name(),
+            'gender' => $this->faker->randomElement(['M', 'F']),
+            'date_of_birth' => $this->faker->dateTimeBetween('-25 years', '-18 years'),
+            'place_of_birth' => $this->faker->city(),
+            'nationality' => $this->faker->country(),
+            'phone' => $this->faker->phoneNumber(),
+            'emergency_contact_name' => $this->faker->name(),
+            'emergency_contact_phone' => $this->faker->phoneNumber(),
+            'address' => $this->faker->address(),
+            'photo_url' => $this->faker->imageUrl(),
+            'status' => $this->faker->randomElement(Student::getStatuses()),
         ];
-    }
-
-    public function withUser(): static
-    {
-        return $this->afterCreating(function (Student $student) {
-            $user = User::factory()->create([
-                'email' => fake()->unique()->safeEmail(),
-                'user_type' => 'STUDENT',
-                'is_active' => true,
-            ]);
-
-            $student->update(['user_id' => $user->id]);
-        });
     }
 }

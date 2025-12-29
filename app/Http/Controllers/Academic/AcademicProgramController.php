@@ -20,6 +20,7 @@ class AcademicProgramController extends BaseApiController
         // $this->middleware('permission:academic_programs.delete')->only('destroy');
     }
 
+
     public function index()
     {
         $programs = QueryBuilder::for(AcademicProgram::query())

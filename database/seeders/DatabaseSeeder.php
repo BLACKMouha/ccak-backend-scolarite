@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -16,8 +17,16 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+          
             PermissionSeeder::class,
-            // Seeders de délibération
+           AcademicYearSeeder::class,
+            CourseSeeder::class,
+            CourseEnrollmentSeeder::class,
+            GradeSeeder::class,
+            SemesterResultSeeder::class,
+          UserSeeder::class,
+          DocumentSeeder::class,
+          GeneratedDocumentSeeder::class
             DeliberationSessionSeeder::class,
             DeliberationResultSeeder::class,
             FacultyMemberSeeder::class,
@@ -30,5 +39,8 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $admin->assignRole('ADMIN');
+
+      
+       
     }
 }

@@ -1,0 +1,70 @@
+{
+    "info": {
+        "name": "Grade API",
+        "_postman_id": "ec8f0dc4-9a43-4e1c-82e7-8a2dfbb5bbc4",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Index",
+            "request": {
+                "method": "GET",
+                "url": "{{base_url}}/api/grades"
+            }
+        },
+        {
+            "name": "Store",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"course_enrollment_id\": 1,\n    \"student_id\": 1,\n    \"course_id\": 1,\n    \"type\": \"exemple\",\n    \"score\": 10.5,\n    \"max_score\": 10.5,\n    \"weight\": 10.5,\n    \"entered_by\": 1,\n    \"status\": \"exemple\",\n    \"entered_at\": \"2025-01-01 12:00:00\",\n    \"validated_at\": \"2025-01-01 12:00:00\"\n}"
+                },
+                "url": "{{base_url}}/api/grades"
+            }
+        },
+        {
+            "name": "Show",
+            "request": {
+                "method": "GET",
+                "url": "{{base_url}}/api/grades/1"
+            }
+        },
+        {
+            "name": "Update",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"course_enrollment_id\": 1,\n    \"student_id\": 1,\n    \"course_id\": 1,\n    \"type\": \"exemple\",\n    \"score\": 10.5,\n    \"max_score\": 10.5,\n    \"weight\": 10.5,\n    \"entered_by\": 1,\n    \"status\": \"exemple\",\n    \"entered_at\": \"2025-01-01 12:00:00\",\n    \"validated_at\": \"2025-01-01 12:00:00\"\n}"
+                },
+                "url": "{{base_url}}/api/grades/1"
+            }
+        },
+        {
+            "name": "Destroy",
+            "request": {
+                "method": "DELETE",
+                "url": "{{base_url}}/api/grades/1"
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8000"
+        }
+    ]
+}

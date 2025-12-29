@@ -9,26 +9,24 @@ trait ApiResponse
 {
     protected function success(mixed $data = null, string $message = 'Operation successful', int $status = 200): JsonResponse
     {
-        $meta = null;
-
         if ($data instanceof AbstractPaginator) {
-            $meta = [
-                'current_page' => $data->currentPage(),
-                'last_page' => $data->lastPage(),
-                'per_page' => $data->perPage(),
-                'total' => $data->total(),
+            $payload = [
+                'success' => true,
+                'data' => [
+                    'data' => $data->items(),
+                    'current_page' => $data->currentPage(),
+                    'last_page' => $data->lastPage(),
+                    'per_page' => $data->perPage(),
+                    'total' => $data->total(),
+                ],
+                'message' => $message,
             ];
-            $data = $data->items();
-        }
-
-        $payload = [
-            'success' => true,
-            'data' => $data,
-            'message' => $message,
-        ];
-
-        if ($meta !== null) {
-            $payload['meta'] = $meta;
+        } else {
+            $payload = [
+                'success' => true,
+                'data' => $data,
+                'message' => $message,
+            ];
         }
 
         return response()->json($payload, $status);

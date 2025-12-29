@@ -1,0 +1,70 @@
+{
+    "info": {
+        "name": "CourseEnrollment API",
+        "_postman_id": "aeb892c6-5b48-412b-a7c3-19c3ade55ac4",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Index",
+            "request": {
+                "method": "GET",
+                "url": "{{base_url}}/api/course-enrollments"
+            }
+        },
+        {
+            "name": "Store",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"enrollment_id\": 1,\n    \"course_id\": 1,\n    \"academic_year_id\": 1,\n    \"semester\": 1,\n    \"status\": \"exemple\",\n    \"enrollment_date\": \"2025-01-01\",\n    \"drop_date\": \"2025-01-01\"\n}"
+                },
+                "url": "{{base_url}}/api/course-enrollments"
+            }
+        },
+        {
+            "name": "Show",
+            "request": {
+                "method": "GET",
+                "url": "{{base_url}}/api/course-enrollments/1"
+            }
+        },
+        {
+            "name": "Update",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"enrollment_id\": 1,\n    \"course_id\": 1,\n    \"academic_year_id\": 1,\n    \"semester\": 1,\n    \"status\": \"exemple\",\n    \"enrollment_date\": \"2025-01-01\",\n    \"drop_date\": \"2025-01-01\"\n}"
+                },
+                "url": "{{base_url}}/api/course-enrollments/1"
+            }
+        },
+        {
+            "name": "Destroy",
+            "request": {
+                "method": "DELETE",
+                "url": "{{base_url}}/api/course-enrollments/1"
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8000"
+        }
+    ]
+}

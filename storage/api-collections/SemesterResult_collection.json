@@ -1,0 +1,70 @@
+{
+    "info": {
+        "name": "SemesterResult API",
+        "_postman_id": "ca48057d-61b9-4222-94b4-33698d007096",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Index",
+            "request": {
+                "method": "GET",
+                "url": "{{base_url}}/api/semester-results"
+            }
+        },
+        {
+            "name": "Store",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"student_id\": 1,\n    \"academic_year_id\": 1,\n    \"semester\": 1,\n    \"total_credits_enrolled\": 10.5,\n    \"total_credits_earned\": 10.5,\n    \"semester_average\": 10.5,\n    \"semester_gpa\": 10.5,\n    \"decision\": \"exemple\",\n    \"calculated_by\": 1,\n    \"calculated_at\": \"2025-01-01 12:00:00\"\n}"
+                },
+                "url": "{{base_url}}/api/semester-results"
+            }
+        },
+        {
+            "name": "Show",
+            "request": {
+                "method": "GET",
+                "url": "{{base_url}}/api/semester-results/1"
+            }
+        },
+        {
+            "name": "Update",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"student_id\": 1,\n    \"academic_year_id\": 1,\n    \"semester\": 1,\n    \"total_credits_enrolled\": 10.5,\n    \"total_credits_earned\": 10.5,\n    \"semester_average\": 10.5,\n    \"semester_gpa\": 10.5,\n    \"decision\": \"exemple\",\n    \"calculated_by\": 1,\n    \"calculated_at\": \"2025-01-01 12:00:00\"\n}"
+                },
+                "url": "{{base_url}}/api/semester-results/1"
+            }
+        },
+        {
+            "name": "Destroy",
+            "request": {
+                "method": "DELETE",
+                "url": "{{base_url}}/api/semester-results/1"
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8000"
+        }
+    ]
+}
