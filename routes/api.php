@@ -14,11 +14,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserRoleController;
+
+use App\Http\Controllers\Student\StudentController;
+use App\Http\Controllers\Student\GuardianController;
+use App\Http\Controllers\Student\DocumentController;
+
 use App\Http\Controllers\Notification\NotificationController;
 use App\Http\Controllers\Notification\AnnouncementController;
 use App\Models\Course;
 
+
 Route::middleware('auth:api')->group(function () {
+    // Basic protected endpoints
     Route::get('/user', function (Request $request) {
         return response()->json([
             'success' => true,
@@ -27,6 +34,7 @@ Route::middleware('auth:api')->group(function () {
             'meta' => null,
         ]);
     });
+
     Route::get('/protected-resource', function () {
         return response()->json([
             'success' => true,
@@ -41,7 +49,6 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('academic-programs', AcademicProgramController::class);
     Route::apiResource('course-units', CourseUnitController::class);
     Route::apiResource('courses', CourseController::class);
-   Route::apiResource('courses', \App\Http\Controllers\Academic\CourseController::class);
     Route::get('courses/{course}/grades', [\App\Http\Controllers\Academic\CourseController::class, 'grades']);
     Route::apiResource('course-enrollments', \App\Http\Controllers\CourseEnrollmentController::class);
 
@@ -98,6 +105,23 @@ Route::middleware('auth:api')->group(function () {
         });
     });
 
+    // Student area
+    Route::apiResource('students', StudentController::class);
+
+    // Nested guardians for students: /api/v1/students/{student}/guardians
+    Route::apiResource('students.guardians', GuardianController::class);
+
+    // Documents: nested index/store/show/update/destroy under students and review route
+    Route::get('students/{student}/documents', [DocumentController::class, 'index']);
+    Route::post('students/{student}/documents', [DocumentController::class, 'store']);
+    Route::get('students/{student}/documents/{document}', [DocumentController::class, 'show']);
+    Route::put('students/{student}/documents/{document}', [DocumentController::class, 'update']);
+    Route::delete('students/{student}/documents/{document}', [DocumentController::class, 'destroy']);
+
+    // Review endpoint (shallow): /api/v1/documents/{id}/review
+    Route::put('documents/{document}/review', [DocumentController::class, 'review']);
+
+    // Admin roles
     Route::get('roles', [RoleController::class, 'index']);
     Route::post('roles', [RoleController::class, 'store']);
     Route::put('roles/{role}', [RoleController::class, 'update']);

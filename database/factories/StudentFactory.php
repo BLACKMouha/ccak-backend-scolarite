@@ -7,22 +7,29 @@ use App\Models\Student;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Student>
+ */
 class StudentFactory extends Factory
 {
-    protected $model = Student::class;
-
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
     public function definition(): array
     {
-
+        static $sequence = 1;
+        $year = date('Y');
 
         return [
-            'id' => $this->faker->uuid(),
             'user_id' => User::factory(),
-            'student_number' => $this->faker->unique()->numerify('STU#######'),
+            'student_number' => "UCAK{$year}" . str_pad($sequence++, 3, '0', STR_PAD_LEFT),
             'full_name' => $this->faker->name(),
-            'date_of_birth' => $this->faker->date('Y-m-d'),
+            'gender' => $this->faker->randomElement(['M', 'F']),
+            'date_of_birth' => $this->faker->dateTimeBetween('-25 years', '-18 years'),
             'place_of_birth' => $this->faker->city(),
-            'nationality' => $this->faker->countryCode(),
+            'nationality' => $this->faker->country(),
             'phone' => $this->faker->phoneNumber(),
             'emergency_contact_name' => $this->faker->name(),
             'emergency_contact_phone' => $this->faker->phoneNumber(),

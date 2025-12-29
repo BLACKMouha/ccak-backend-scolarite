@@ -42,6 +42,10 @@ final class PermissionCatalog
             'registrations.delete',
             'student_records.view',
             'student_records.update',
+            'students.view',
+            'students.create',
+            'students.update',
+            'students.delete',
 
             // Grades & deliberations
             'grades.view',
@@ -132,6 +136,9 @@ final class PermissionCatalog
                 'registrations.create',
                 'registrations.update',
                 'student_records.view',
+                'students.view',
+                'students.create',
+                'students.update',
                 'grades.view',
                 'transcripts.view',
                 'documents.view',

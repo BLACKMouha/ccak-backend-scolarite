@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Storage;
+
 
 class Document extends Model
 {
@@ -151,4 +153,51 @@ class Document extends Model
         return $query->where('status', DocumentStatus::PENDING)
             ->whereNull('reviewed_at');
     }
+       /**
+     * Approve the document.
+     */
+    public function approve(Admin $admin, ?string $notes = null): void
+    {
+        $this->update([
+            'status' => 'APPROVED',
+            'reviewed_by' => $admin->id,
+            'reviewed_at' => now(),
+            'notes' => $notes,
+        ]);
+    }
+
+    /**
+     * Reject the document.
+     */
+    public function reject(Admin $admin, string $notes): void
+    {
+        $this->update([
+            'status' => 'REJECTED',
+            'reviewed_by' => $admin->id,
+            'reviewed_at' => now(),
+            'notes' => $notes,
+        ]);
+    }
+
+    /**
+     * Get document type labels.
+     */
+    public static function typeLabels(): array
+    {
+        return [
+            'CNI' => 'Carte Nationale d\'Identité',
+            'BIRTH_CERT' => 'Acte de Naissance',
+            'BAC_DIPLOMA' => 'Diplôme du Baccalauréat',
+            'TRANSCRIPT' => 'Relevé de Notes',
+            'PHOTO' => 'Photo d\'Identité',
+            'MEDICAL' => 'Certificat Médical',
+        ];
+    }
+
+    /**
+     * Get the label for the current document type.
+     */
+    public function getTypeLabelAttribute(): string
+    {
+        return self::typeLabels()[$this->type] ?? $this->type;
 }

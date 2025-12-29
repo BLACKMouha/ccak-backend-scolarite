@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Ramsey\Uuid\Uuid;
@@ -77,6 +78,27 @@ class User extends Authenticatable
         return Uuid::uuid7()->toString();
     }
 
+
+    public function student(): HasOne
+    {
+        return $this->hasOne(Student::class);
+    }
+
+    public function admin(): HasOne
+    {
+        return $this->hasOne(Admin::class);
+    }
+
+    /**
+     * Get or create admin profile for this user.
+     */
+    public function getOrCreateAdmin(): Admin
+    {
+        return $this->admin ?? $this->admin()->create([
+            'user_id' => $this->id,
+            'full_name' => $this->email, // or some default name
+        ]);
+
     /**
      * Transform audit data for User
      */
@@ -115,5 +137,6 @@ class User extends Authenticatable
 
         // Also update the last_login_at field
         $this->update(['last_login_at' => now()]);
+
     }
 }

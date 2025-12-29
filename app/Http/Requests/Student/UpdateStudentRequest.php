@@ -15,22 +15,29 @@ class UpdateStudentRequest extends FormRequest
 
     public function rules(): array
     {
-        $id = $this->route('student');
         return [
-            'student_number' => ['sometimes','string','max:255', \Illuminate\Validation\Rule::unique('students', 'student_number')->ignore($id)],
-            'full_name' => ['sometimes','string','max:255', ],
-            'user_id' => ['sometimes','string', \Illuminate\Validation\Rule::unique('students', 'user_id')->ignore($id)],
-            'student_number' => ['sometimes','string', \Illuminate\Validation\Rule::unique('students', 'student_number')->ignore($id)],
-            'full_name' => ['sometimes','string', ],
-            'date_of_birth' => ['nullable','date', ],
-            'place_of_birth' => ['nullable','string', ],
-            'nationality' => ['nullable','string', ],
-            'phone' => ['nullable','string', ],
-            'emergency_contact_name' => ['nullable','string', ],
-            'emergency_contact_phone' => ['nullable','string', ],
-            'address' => ['nullable','string', ],
-            'photo_url' => ['nullable','string', ],
-            'status' => ['sometimes','string', ],
+              'student_number' => ['sometimes','string','max:255', \Illuminate\Validation\Rule::unique('students', 'student_number')->ignore($id)],
+
+            'full_name' => ['sometimes', 'required', 'string', 'max:255'],
+            'gender' => ['sometimes', 'required', 'in:M,F'],
+            'date_of_birth' => ['sometimes', 'required', 'date', 'before:today'],
+            'place_of_birth' => ['sometimes', 'required', 'string', 'max:255'],
+            'nationality' => ['sometimes', 'required', 'string', 'max:255'],
+            'phone' => ['sometimes', 'required', 'string', 'max:20'],
+            'emergency_contact_name' => ['sometimes', 'required', 'string', 'max:255'],
+            'emergency_contact_phone' => ['sometimes', 'required', 'string', 'max:20'],
+            'address' => ['sometimes', 'required', 'string'],
+            'photo_url' => ['sometimes', 'nullable', 'url'],
+            'status' => ['sometimes', 'in:ACTIVE,SUSPENDED,GRADUATED,WITHDRAWN,EXPELLED'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'gender.in' => 'Le genre doit être M ou F.',
+            'date_of_birth.before' => 'La date de naissance doit être antérieure à aujourd\'hui.',
+            'status.in' => 'Le statut doit être l\'un des suivants : ACTIVE, SUSPENDED, GRADUATED, WITHDRAWN, EXPELLED.',
         ];
     }
 }

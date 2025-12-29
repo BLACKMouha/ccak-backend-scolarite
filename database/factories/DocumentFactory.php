@@ -4,35 +4,60 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Models\Document;
+use App\Models\Student;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Document>
+ */
 class DocumentFactory extends Factory
 {
-    protected $model = Document::class;
-
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
     public function definition(): array
     {
         return [
-            'student_id' => $this->faker->uuid(),
-            'reviewed_by' => $this->faker->uuid(),
-            'file_path' => $this->faker->filePath(),
-            'file_name' => $this->faker->sentence(),
-            'type' => $this->faker->randomElement([
-                'CNI',
-                'BIRTH_CERT',
-                'BAC_DIPLOMA',
-                'TRANSCRIPT',
-                'PHOTO',
-                'MEDICAL',
-            ]),
-            'status' => $this->faker->randomElement([
-                'PENDING',
-                'APPROVED',
-                'REJECTED',
-            ]),
-            'notes' => $this->faker->sentence(),
-            'uploaded_at' => $this->faker->dateTime()->format('Y-m-d H:i:s'),
-            'reviewed_at' => $this->faker->dateTime()->format('Y-m-d H:i:s'),
+            'student_id' => Student::factory(),
+            'type' => $this->faker->randomElement(array_keys(Document::typeLabels())),
+            'file_path' => 'documents/' . $this->faker->uuid() . '.pdf',
+            'file_name' => $this->faker->word() . '.pdf',
+            'status' => $this->faker->randomElement(['PENDING', 'APPROVED', 'REJECTED']),
+            'uploaded_at' => $this->faker->dateTimeBetween('-1 month', 'now'),
         ];
+    }
+
+    /**
+     * Indicate that the document is pending.
+     */
+    public function pending(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'status' => 'PENDING',
+        ]);
+    }
+
+    /**
+     * Indicate that the document is approved.
+     */
+    public function approved(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'status' => 'APPROVED',
+            'reviewed_at' => $this->faker->dateTimeBetween('-1 week', 'now'),
+        ]);
+    }
+
+    /**
+     * Indicate that the document is rejected.
+     */
+    public function rejected(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'status' => 'REJECTED',
+            'reviewed_at' => $this->faker->dateTimeBetween('-1 week', 'now'),
+        ]);
     }
 }

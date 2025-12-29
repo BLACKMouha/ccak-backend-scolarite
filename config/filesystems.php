@@ -68,6 +68,14 @@ return [
             'report' => false,
         ],
 
+        'externeStorage' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private'),
+            'serve' => true,
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*
