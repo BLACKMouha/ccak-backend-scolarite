@@ -2,27 +2,27 @@
 
 namespace App\Http\Requests\Notification;
 
+use App\Models\Announcement;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateAnnouncementRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        return $this->user()->hasRole('ADMIN');
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'title' => ['sometimes', 'string', 'max:255'],
+            'content' => ['sometimes', 'string'],
+            'priority' => ['sometimes', 'string', Rule::in(Announcement::getPriorities())],
+            'target_audience' => ['sometimes', 'array'],
+            'publish_at' => ['sometimes', 'nullable', 'date'],
+            'expire_at' => ['sometimes', 'nullable', 'date'],
+            'is_draft' => ['sometimes', 'boolean'],
         ];
     }
 }

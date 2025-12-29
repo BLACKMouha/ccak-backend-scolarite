@@ -14,6 +14,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserRoleController;
+use App\Http\Controllers\Notification\NotificationController;
+use App\Http\Controllers\Notification\AnnouncementController;
 use App\Models\Course;
 
 Route::middleware('auth:api')->group(function () {
@@ -43,6 +45,27 @@ Route::middleware('auth:api')->group(function () {
     Route::get('courses/{course}/grades', [\App\Http\Controllers\Academic\CourseController::class, 'grades']);
     Route::apiResource('course-enrollments', \App\Http\Controllers\CourseEnrollmentController::class);
 
+   // Notifications
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index']); // NOT-008
+        Route::post('/', [NotificationController::class, 'send'])->middleware('role:ADMIN'); // NOT-007
+        Route::put('/{id}/read', [NotificationController::class, 'markAsRead']); // NOT-009
+        Route::post('/read-all', [NotificationController::class, 'markAllAsRead']); // NOT-010
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::delete('/{id}', [NotificationController::class, 'destroy']);
+    });
+
+    // Announcements
+    Route::prefix('announcements')->group(function () {
+        Route::get('/', [AnnouncementController::class, 'index']); // NOT-012
+        Route::post('/', [AnnouncementController::class, 'store'])->middleware('role:ADMIN'); // NOT-011
+        Route::get('/{id}', [AnnouncementController::class, 'show']);
+        Route::put('/{id}', [AnnouncementController::class, 'update'])->middleware('role:ADMIN');
+        Route::delete('/{id}', [AnnouncementController::class, 'destroy'])->middleware('role:ADMIN');
+        Route::post('/{id}/dismiss', [AnnouncementController::class, 'dismiss']);
+        Route::post('/{id}/publish', [AnnouncementController::class, 'publish'])->middleware('role:ADMIN');
+    });
+  
     Route::apiResource('generated-documents', GeneratedDocumentController::class);
     Route::get('/generated-documents/verify/{documentNumber}', [GeneratedDocumentController::class, 'verify']);
     Route::apiResource('documents', DocumentController::class);
